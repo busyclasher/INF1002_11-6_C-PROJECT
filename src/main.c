@@ -14,23 +14,21 @@ int main(void) {
     }
 
     status = cms_print_declaration();
-    if (status == CMS_STATUS_NOT_IMPLEMENTED) {
-        fputs("CMS: Declaration output is not implemented yet.\n", stdout);
-    } else if (status != CMS_STATUS_OK) {
+    if (status != CMS_STATUS_OK) {
         fprintf(stderr, "CMS: Failed to print declaration (%s).\n", cms_status_message(status));
         database_free(&db);
         return EXIT_FAILURE;
     }
 
+    puts("CMS: Type HELP to list available commands.");
+
     status = cms_run_cli(&db);
-    if (status == CMS_STATUS_NOT_IMPLEMENTED) {
-        fputs("CMS: Command loop is not implemented yet.\n", stdout);
-    } else if (status != CMS_STATUS_OK) {
+    if (status != CMS_STATUS_OK) {
         fprintf(stderr, "CMS: Command loop terminated with error (%s).\n", cms_status_message(status));
         database_free(&db);
         return EXIT_FAILURE;
     }
 
     database_free(&db);
-    return (status == CMS_STATUS_OK) ? EXIT_SUCCESS : EXIT_FAILURE;
+    return EXIT_SUCCESS;
 }

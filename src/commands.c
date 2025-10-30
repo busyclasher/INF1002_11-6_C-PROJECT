@@ -1,5 +1,6 @@
 #include "commands.h"
 
+#include <ctype.h>
 #include <errno.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -25,6 +26,7 @@ static CmsStatus parse_student_id_argument(const char *args, int *out_id);
 static CmsStatus prompt_student_record(StudentRecord *out_record);
 static CmsStatus prompt_updated_record(StudentRecord *record);
 static void print_record(const StudentRecord *record);
+static bool starts_with_ignore_case(const char *text, const char *prefix);
 
 typedef struct CommandMapping {
     const char *name;
@@ -126,8 +128,9 @@ static CmsStatus handle_open(StudentDatabase *db, const char *args, CmsCommandRe
         path = CMS_DEFAULT_DATABASE_FILE;
     }
 
-    cms_trim(strncpy(path_buffer, path, sizeof(path_buffer)));
+    strncpy(path_buffer, path, sizeof(path_buffer) - 1);
     path_buffer[sizeof(path_buffer) - 1] = '\0';
+    cms_trim(path_buffer);
 
     CmsStatus status = database_open(db, path_buffer);
     if (status == CMS_STATUS_OK) {
@@ -171,7 +174,7 @@ static CmsStatus handle_show(StudentDatabase *db, const char *args, CmsCommandRe
         return status;
     }
 
-    if (strncasecmp(trimmed, "ALL", 3) != 0) {
+    if (!starts_with_ignore_case(trimmed, "ALL")) {
         printf("CMS: Unknown SHOW command \"%s\".\n", trimmed);
         return CMS_STATUS_INVALID_ARGUMENT;
     }
@@ -384,8 +387,9 @@ static CmsStatus handle_save(StudentDatabase *db, const char *args, CmsCommandRe
     char path_buffer[CMS_MAX_FILE_PATH_LEN];
     const char *path = args;
     if (path && path[0] != '\0') {
-        cms_trim(strncpy(path_buffer, path, sizeof(path_buffer)));
+        strncpy(path_buffer, path, sizeof(path_buffer) - 1);
         path_buffer[sizeof(path_buffer) - 1] = '\0';
+        cms_trim(path_buffer);
         path = path_buffer;
     }
 
@@ -603,4 +607,21 @@ static void print_record(const StudentRecord *record) {
     printf("Name: %s\n", record->name);
     printf("Programme: %s\n", record->programme);
     printf("Mark: %.2f\n", record->mark);
+}
+
+static bool starts_with_ignore_case(const char *text, const char *prefix) {
+    if (!text || !prefix) {
+        return false;
+    }
+    while (*prefix) {
+        if (*text == '\0') {
+            return false;
+        }
+        if (toupper((unsigned char)*text) != toupper((unsigned char)*prefix)) {
+            return false;
+        }
+        ++text;
+        ++prefix;
+    }
+    return true;
 }
