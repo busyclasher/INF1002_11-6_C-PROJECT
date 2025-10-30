@@ -1,0 +1,12 @@
+#ifndef CONFIG_H
+#define CONFIG_H
+
+#define CMS_MAX_NAME_LEN 64
+#define CMS_MAX_PROGRAMME_LEN 64
+#define CMS_MAX_COMMAND_LEN 256
+#define CMS_MAX_FILE_PATH_LEN 260
+#define CMS_MAX_LINE_LEN 512
+
+#define CMS_DEFAULT_DATABASE_FILE "TeamName-CMS.txt"
+
+#endif /* CONFIG_H */
