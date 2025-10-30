@@ -174,6 +174,11 @@ static CmsStatus handle_show(StudentDatabase *db, const char *args, CmsCommandRe
         return status;
     }
 
+    if (cms_string_equals_ignore_case(trimmed, "PROGRAMMES")) {
+        CmsStatus status = cms_show_programme_stats(db);
+        return status;
+    }
+
     if (!starts_with_ignore_case(trimmed, "ALL")) {
         printf("CMS: Unknown SHOW command \"%s\".\n", trimmed);
         return CMS_STATUS_INVALID_ARGUMENT;
@@ -235,11 +240,7 @@ static CmsStatus handle_show(StudentDatabase *db, const char *args, CmsCommandRe
         }
     }
 
-    CmsStatus status = cms_show_all_sorted(db, key, order);
-    if (status == CMS_STATUS_NOT_IMPLEMENTED) {
-        puts("CMS: Sorted display is not implemented yet.");
-    }
-    return status;
+    return cms_show_all_sorted(db, key, order);
 }
 
 static CmsStatus handle_insert(StudentDatabase *db, const char *args, CmsCommandResult *result) {
@@ -413,6 +414,7 @@ static CmsStatus handle_help(StudentDatabase *db, const char *args, CmsCommandRe
     puts("  SHOW ALL              - Display all student records.");
     puts("  SHOW ALL SORT BY ...  - Display records sorted by ID or MARK (ASC or DESC).");
     puts("  SHOW SUMMARY          - Display summary statistics.");
+    puts("  SHOW PROGRAMMES       - Display programme counts and average marks (unique feature).");
     puts("  INSERT                - Insert a new student record.");
     puts("  QUERY <ID>            - Display a record by student ID.");
     puts("  UPDATE <ID>           - Update a record by student ID.");

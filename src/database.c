@@ -284,10 +284,6 @@ size_t database_record_count(const StudentDatabase *db) {
     return db->count;
 }
 
-static CmsStatus database_copy_file_path(StudentDatabase *db, const char *file_path) {
-    return database_set_file(db, file_path);
-}
-
 static CmsStatus database_ensure_capacity(StudentDatabase *db, size_t min_capacity) {
     if (db->capacity >= min_capacity) {
         return CMS_STATUS_OK;

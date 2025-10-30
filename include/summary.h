@@ -17,9 +17,9 @@ typedef enum CmsSortOrder {
     CMS_SORT_DESC
 } CmsSortOrder;
 
-CmsStatus cms_sort_records(StudentDatabase *db, CmsSortKey key, CmsSortOrder order, bool in_place);
 CmsStatus cms_show_all(const StudentDatabase *db);
-CmsStatus cms_show_all_sorted(StudentDatabase *db, CmsSortKey key, CmsSortOrder order);
+CmsStatus cms_show_all_sorted(const StudentDatabase *db, CmsSortKey key, CmsSortOrder order);
 CmsStatus cms_show_summary(const StudentDatabase *db);
+CmsStatus cms_show_programme_stats(const StudentDatabase *db);
 
 #endif /* SUMMARY_H */
