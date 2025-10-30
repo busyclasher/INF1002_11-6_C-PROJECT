@@ -7,6 +7,9 @@
 #define CMS_MAX_FILE_PATH_LEN 260
 #define CMS_MAX_LINE_LEN 512
 
+#define CMS_MIN_MARK 0.0f
+#define CMS_MAX_MARK 100.0f
+
 #define CMS_DEFAULT_DATABASE_FILE "TeamName-CMS.txt"
 
 #endif /* CONFIG_H */

@@ -34,7 +34,7 @@ bool database_is_loaded(const StudentDatabase *db);
 bool database_is_dirty(const StudentDatabase *db);
 
 CmsStatus database_open(StudentDatabase *db, const char *file_path);
-CmsStatus database_save(const StudentDatabase *db, const char *file_path);
+CmsStatus database_save(StudentDatabase *db, const char *file_path);
 
 CmsStatus database_insert(StudentDatabase *db, const StudentRecord *record);
 CmsStatus database_update(StudentDatabase *db, const StudentRecord *record);
