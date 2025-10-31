@@ -1,0 +1,5 @@
+Table Name: StudentRecords
+ID	Name	Programme	Mark
+2301234	Joshua Chen	Software Engineering	75.00
+2304567	John Levoy	Digital Supply Chain	85.90
+2401234	Michelle Lee	Information Systems	79.50
