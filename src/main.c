@@ -1,8 +1,8 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include "cms.h"
-#include "database.h"
-#include "commands.h"
+#include "../include/cms.h"
+#include "../include/database.h"
+#include "../include/commands.h"
 
 int main(void) {
     StudentDatabase db;

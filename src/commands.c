@@ -1,11 +1,11 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include "commands.h"
-#include "database.h"
-#include "summary.h"
-#include "utils.h"
-#include "config.h"
+#include "../include/commands.h"
+#include "../include/database.h"
+#include "../include/summary.h"
+#include "../include/utils.h"
+#include "../include/config.h"
 
 /**
  * Opens a student database file.

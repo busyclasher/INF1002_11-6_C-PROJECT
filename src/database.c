@@ -1,8 +1,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include "database.h"
-#include "config.h"
+#include "../include/database.h"
+#include "../include/config.h"
 
 CMS_STATUS cms_database_init(StudentDatabase *db) {
     /* TODO: Implement database initialization */

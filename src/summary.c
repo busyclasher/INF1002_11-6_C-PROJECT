@@ -1,6 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include "summary.h"
+#include "../include/summary.h"
 
 /* Comparison functions for qsort */
 static int compare_by_id_asc(const void *a, const void *b) {
