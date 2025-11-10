@@ -3,6 +3,17 @@
 
 #include "cms.h"
 
+typedef enum CmsSortKey {
+    CMS_SORT_KEY_NONE = 0,
+    CMS_SORT_KEY_ID,
+    CMS_SORT_KEY_MARK
+} CmsSortKey;
+
+typedef enum CmsSortOrder {
+    CMS_SORT_ASC = 0,
+    CMS_SORT_DESC
+} CmsSortOrder;
+
 /* Sort order enumeration */
 typedef enum {
     SORT_ASCENDING,

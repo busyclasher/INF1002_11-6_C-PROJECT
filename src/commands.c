@@ -7,24 +7,95 @@
 #include "utils.h"
 #include "config.h"
 
+/**
+ * Opens a student database file.
+ * @param db Pointer to the StudentDatabase structure to load data into.
+ * @param filename Path to the database file (uses CMS_DEFAULT_DATABASE_FILE if NULL or empty).
+ * @return CMS_STATUS_OK on success, CMS_STATUS_INVALID_ARGUMENT or error code otherwise.
+ */
 CMS_STATUS cmd_open(StudentDatabase *db, const char *filename) {
-    /* TODO: Implement OPEN command */
-    if (db == NULL || filename == NULL) {
-        return CMS_STATUS_INVALID_ARGUMENT;
-    }
-
-    return cms_database_load(db, filename);
-}
-
-CMS_STATUS cmd_show(const StudentDatabase *db, const char *option, const char *order) {
-    /* TODO: Implement SHOW command */
     if (db == NULL) {
         return CMS_STATUS_INVALID_ARGUMENT;
     }
 
-    /* TODO: Handle ALL, SUMMARY, ID, MARK options */
-    /* TODO: Handle ASC, DESC sorting */
-    return CMS_STATUS_NOT_IMPLEMENTED;
+    char path_buffer[CMS_MAX_FILE_PATH_LEN];
+    if (filename == NULL || filename[0] == '\0') {
+        filename = CMS_DEFAULT_DATABASE_FILE;
+    }
+
+    strncpy(path_buffer, filename, sizeof(path_buffer) - 1);
+    path_buffer[sizeof(path_buffer) - 1] = '\0';
+    cms_trim(path_buffer);
+
+    if (path_buffer[0] == '\0') {
+        return CMS_STATUS_INVALID_ARGUMENT;
+    }
+
+    return cms_database_load(db, path_buffer);
+}
+
+/**
+ * Displays student records or summary information.
+ * @param db Pointer to the StudentDatabase structure to read from.
+ * @param option Display mode: "ALL", "SUMMARY", "ID", or "MARK".
+ * @param order Sort order for "ID" or "MARK": "ASC" or "DESC".
+ * @return CMS_STATUS_OK on success, CMS_STATUS_INVALID_ARGUMENT or error code otherwise.
+ */
+CMS_STATUS cmd_show(const StudentDatabase *db, const char *option, const char *order) {
+    if (db == NULL) {
+        return CMS_STATUS_INVALID_ARGUMENT;
+    }
+    if (option == NULL) {
+        return CMS_STATUS_INVALID_ARGUMENT;
+    }
+
+    char opt_buf[32];
+    char ord_buf[16];
+
+    strncpy(opt_buf, option, sizeof(opt_buf) - 1);
+    opt_buf[sizeof(opt_buf) - 1] = '\0';
+    cms_trim(opt_buf);
+
+    if (order) {
+        strncpy(ord_buf, order, sizeof(ord_buf) - 1);
+        ord_buf[sizeof(ord_buf) - 1] = '\0';
+        cms_trim(ord_buf);
+    } else {
+        ord_buf[0] = '\0';
+    }
+
+    if (cms_string_equals_ignore_case(opt_buf, "SUMMARY")) {
+        return cms_show_summary(db);
+    }
+
+    if (cms_string_equals_ignore_case(opt_buf, "ALL")) {
+        if (ord_buf[0] != '\0') {
+            return CMS_STATUS_INVALID_ARGUMENT;
+        }
+        return cms_show_all(db);
+    }
+
+    CmsSortKey sort_key;
+    if (cms_string_equals_ignore_case(opt_buf, "ID")) {
+        sort_key = CMS_SORT_KEY_ID;
+    } else if (cms_string_equals_ignore_case(opt_buf, "MARK")) {
+        sort_key = CMS_SORT_KEY_MARK;
+    } else {
+        return CMS_STATUS_INVALID_ARGUMENT;
+    }
+
+    CmsSortOrder sort_order = CMS_SORT_ASC;
+    if (ord_buf[0] != '\0') {
+        if (cms_string_equals_ignore_case(ord_buf, "ASC")) {
+            sort_order = CMS_SORT_ASC;
+        } else if (cms_string_equals_ignore_case(ord_buf, "DESC")) {
+            sort_order = CMS_SORT_DESC;
+        } else {
+            return CMS_STATUS_INVALID_ARGUMENT;
+        }
+    }
+
+    return cms_show_all_sorted(db, sort_key, sort_order);
 }
 
 CMS_STATUS cmd_insert(StudentDatabase *db) {
