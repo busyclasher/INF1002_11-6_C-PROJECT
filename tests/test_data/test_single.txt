@@ -1,0 +1,4 @@
+Table Name: StudentRecords
+ID	Name	Programme	Mark
+2301234	Single Student	Computer Science	75.0
+

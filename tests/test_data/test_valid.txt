@@ -1,0 +1,13 @@
+Table Name: StudentRecords
+ID	Name	Programme	Mark
+2301234	Joshua Chen	Software Engineering	70.5
+2201234	Isaac Teo	Computer Science	63.4
+2304567	John Levoy	Digital Supply Chain	85.9
+2305678	Sarah Wong	Cybersecurity	92.3
+2202345	David Lim	Information Systems	78.0
+2306789	Emily Tan	Computer Science	88.5
+2203456	Michael Ng	Software Engineering	56.7
+2307890	Rachel Lee	Digital Supply Chain	95.2
+2204567	Kevin Chan	Cybersecurity	82.1
+2308901	Jessica Koh	Information Systems	71.8
+

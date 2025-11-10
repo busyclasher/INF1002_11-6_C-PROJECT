@@ -1,8 +1,8 @@
 #include <stdio.h>
 #include <string.h>
 #include <ctype.h>
-#include "utils.h"
-#include "config.h"
+#include "../include/utils.h"
+#include "../include/config.h"
 
 bool cms_validate_student_id(int id) {
     /* TODO: Implement student ID validation */

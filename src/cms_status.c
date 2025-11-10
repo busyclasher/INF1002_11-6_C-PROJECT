@@ -1,5 +1,5 @@
 #include <stdio.h>
-#include "cms.h"
+#include "../include/cms.h"
 
 const char* cms_status_message(CMS_STATUS status) {
     /* TODO: Implement status message mapping */
