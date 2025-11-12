@@ -107,6 +107,7 @@ CMS_STATUS cms_database_show_sorted(const StudentDatabase *db, char sort_key[32]
     /* Display sorted records without modifying the original database */
     if (db == NULL) {
         return CMS_STATUS_INVALID_ARGUMENT;
+        // return CMS_STATUS_NOT_FOUND;
     }
 
     if (db->records == NULL || db->count == 0) {
