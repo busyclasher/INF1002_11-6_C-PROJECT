@@ -25,7 +25,7 @@ CMS_STATUS cmd_open(StudentDatabase *db, const char *filename) {
 
     strncpy(path_buffer, filename, sizeof(path_buffer) - 1);
     path_buffer[sizeof(path_buffer) - 1] = '\0';
-    cms_trim(path_buffer);
+    cms_trim_string(path_buffer);
 
     if (path_buffer[0] == '\0') {
         return CMS_STATUS_INVALID_ARGUMENT;
@@ -54,25 +54,25 @@ CMS_STATUS cmd_show(const StudentDatabase *db, const char *option, const char *o
 
     strncpy(opt_buf, option, sizeof(opt_buf) - 1);
     opt_buf[sizeof(opt_buf) - 1] = '\0';
-    cms_trim(opt_buf);
+    cms_trim_string(opt_buf);
 
     if (order) {
         strncpy(ord_buf, order, sizeof(ord_buf) - 1);
         ord_buf[sizeof(ord_buf) - 1] = '\0';
-        cms_trim(ord_buf);
+        cms_trim_string(ord_buf);
     } else {
         ord_buf[0] = '\0';
     }
 
     if (cms_string_equals_ignore_case(opt_buf, "SUMMARY")) {
-        return cms_show_summary(db);
+        return cms_display_summary(db);
     }
 
     if (cms_string_equals_ignore_case(opt_buf, "ALL")) {
         if (ord_buf[0] != '\0') {
             return CMS_STATUS_INVALID_ARGUMENT;
         }
-        return cms_show_all(db);
+        return cms_database_show_all(db);
     }
 
     CmsSortKey sort_key;
@@ -95,7 +95,7 @@ CMS_STATUS cmd_show(const StudentDatabase *db, const char *option, const char *o
         }
     }
 
-    return cms_show_all_sorted(db, sort_key, sort_order);
+    return cms_database_show_sorted(db, sort_key, sort_order);
 }
 
 CMS_STATUS cmd_insert(StudentDatabase *db) {
@@ -143,6 +143,24 @@ CMS_STATUS cmd_delete(StudentDatabase *db, int student_id) {
     if (db == NULL) {
         return CMS_STATUS_INVALID_ARGUMENT;
     }
+
+    
+    // StudentRecord *recordPointer = NULL;
+
+    // for (size_t i = 0; i < db->count; i++) {
+    //     StudentRecord *record = &db -> records[i];
+    //     if (record -> id == student_id) {
+    //         recordPointer = &db->records[i];
+    //         break;
+    //     }
+    // }
+
+    // if (recordPointer == NULL) {
+    //     printf("Record not found\n");
+    //     return CMS_STATUS_NOT_FOUND;
+    // } else {
+    //     printf(" %c", (char)recordPointer);
+    // }
 
     return cms_database_delete(db, student_id);
 }

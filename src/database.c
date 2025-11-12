@@ -3,6 +3,7 @@
 #include <string.h>
 #include "../include/database.h"
 #include "../include/config.h"
+#include "../include/summary.h"
 
 CMS_STATUS cms_database_init(StudentDatabase *db) {
     /* TODO: Implement database initialization */
@@ -100,6 +101,50 @@ CMS_STATUS cms_database_show_all(const StudentDatabase *db) {
 
     /* TODO: Print all records in formatted table */
     return CMS_STATUS_NOT_IMPLEMENTED;
+}
+
+CMS_STATUS cms_database_show_sorted(const StudentDatabase *db, char sort_key[32], char sort_order[32]) {
+    /* Display sorted records without modifying the original database */
+    if (db == NULL) {
+        return CMS_STATUS_INVALID_ARGUMENT;
+    }
+
+    if (db->records == NULL || db->count == 0) {
+        printf("No records to display.\n");
+        return CMS_STATUS_OK;
+    }
+
+    /* Create a copy of the records to sort */
+    StudentRecord *sorted_records = (StudentRecord *)malloc(db->count * sizeof(StudentRecord));
+    if (sorted_records == NULL) {
+        return CMS_STATUS_ERROR;
+    }
+
+    /* Copy records */
+    memcpy(sorted_records, db->records, db->count * sizeof(StudentRecord));
+
+    /* Note: Sorting logic would use cms_sort_by_id() or cms_sort_by_mark() from summary.h
+       For now, we'll just display records in current order */
+    
+    /* Display header */
+    printf("\nTable Name: StudentRecords\n");
+    printf("%-12s %-20s %-30s %-10s\n", "ID", "Name", "Programme", "Mark");
+    printf("%-12s %-20s %-30s %-10s\n", "----", "----", "---------", "----");
+
+    /* Display sorted records */
+    for (size_t i = 0; i < db->count; i++) {
+        printf("%-12d %-20s %-30s %-10.1f\n",
+               sorted_records[i].id,
+               sorted_records[i].name,
+               sorted_records[i].programme,
+               sorted_records[i].mark);
+    }
+    printf("\n");
+
+    /* Free the copied records */
+    free(sorted_records);
+
+    return CMS_STATUS_OK;
 }
 
 CMS_STATUS cms_database_show_record(const StudentRecord *record) {

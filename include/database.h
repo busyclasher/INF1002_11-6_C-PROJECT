@@ -20,6 +20,7 @@ CMS_STATUS cms_database_delete(StudentDatabase *db, int student_id);
 /* Display operations */
 CMS_STATUS cms_database_show_all(const StudentDatabase *db);
 CMS_STATUS cms_database_show_record(const StudentRecord *record);
+CMS_STATUS cms_database_show_sorted(const StudentDatabase *db, char sort_key[32], char sort_order[32]);
 
 #endif /* CMS_DATABASE_H */
 
