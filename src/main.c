@@ -3,6 +3,7 @@
 #include "../include/cms.h"
 #include "../include/database.h"
 #include "../include/commands.h"
+#include "../include/utils.h"
 
 int main(void) {
     StudentDatabase db;

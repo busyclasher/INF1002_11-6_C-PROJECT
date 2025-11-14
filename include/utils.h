@@ -1,6 +1,7 @@
 #ifndef CMS_UTILS_H
 #define CMS_UTILS_H
 
+#include "cms.h"
 #include <stdbool.h>
 
 /* Input validation */
@@ -18,6 +19,9 @@ bool cms_read_line(char *buffer, size_t size);
 bool cms_read_int(const char *prompt, int *value);
 bool cms_read_float(const char *prompt, float *value);
 bool cms_read_string(const char *prompt, char *buffer, size_t size);
+
+/* Table display */
+void cms_display_table(const StudentDatabase *db);
 
 #endif /* CMS_UTILS_H */
 

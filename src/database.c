@@ -3,6 +3,7 @@
 #include <string.h>
 #include "../include/database.h"
 #include "../include/config.h"
+#include "../include/utils.h"
 #include "../include/summary.h"
 
 CMS_STATUS cms_database_init(StudentDatabase *db) {
@@ -37,8 +38,120 @@ CMS_STATUS cms_database_load(StudentDatabase *db, const char *file_path) {
         return CMS_STATUS_INVALID_ARGUMENT;
     }
 
-    /* TODO: Open file, parse records, populate database */
-    return CMS_STATUS_NOT_IMPLEMENTED;
+    FILE *fp = fopen(file_path, "r");
+    if (fp == NULL) {
+        return CMS_STATUS_IO;
+    }
+
+    char line[1024];
+    size_t line_no = 0;
+
+    /* Ensure database has initial capacity */
+    if (db->records == NULL) {
+        db->capacity = CMS_INITIAL_CAPACITY;
+        db->records = (StudentRecord *)malloc(db->capacity * sizeof(StudentRecord));
+        if (db->records == NULL) {
+            fclose(fp);
+            return CMS_STATUS_ERROR;
+        }
+        db->count = 0;
+    }
+
+    /* Read file line-by-line. Skip first two header lines if present. */
+    while (fgets(line, sizeof(line), fp) != NULL) {
+        line_no++;
+
+        /* Trim whitespace */
+        cms_trim_string(line);
+
+        /* Skip empty lines */
+        if (line[0] == '\0') {
+            continue;
+        }
+
+        /* Skip header lines (common in sample format) */
+        if (line_no == 1) {
+            /* e.g. "Table Name: StudentRecords" */
+            continue;
+        }
+        if (line_no == 2) {
+            /* header row: "ID\tName\tProgramme\tMark" */
+            continue;
+        }
+
+        /* Tokenize by tab characters (fields expected: ID, Name, Programme, Mark) */
+        char *saveptr = NULL;
+        char *tok = NULL;
+
+        tok = strtok_r(line, "\t", &saveptr);
+        if (tok == NULL) {
+            fclose(fp);
+            return CMS_STATUS_PARSE_ERROR;
+        }
+        cms_trim_string(tok);
+        int id = atoi(tok);
+        if (!cms_validate_student_id(id)) {
+            fclose(fp);
+            return CMS_STATUS_PARSE_ERROR;
+        }
+
+        char name_buf[CMS_MAX_NAME_LEN + 1] = {0};
+        tok = strtok_r(NULL, "\t", &saveptr);
+        if (tok == NULL) { fclose(fp); return CMS_STATUS_PARSE_ERROR; }
+        cms_trim_string(tok);
+        strncpy(name_buf, tok, CMS_MAX_NAME_LEN);
+        name_buf[CMS_MAX_NAME_LEN] = '\0';
+        if (!cms_validate_name(name_buf)) { fclose(fp); return CMS_STATUS_PARSE_ERROR; }
+
+        char prog_buf[CMS_MAX_PROGRAMME_LEN + 1] = {0};
+        tok = strtok_r(NULL, "\t", &saveptr);
+        if (tok == NULL) { fclose(fp); return CMS_STATUS_PARSE_ERROR; }
+        cms_trim_string(tok);
+        strncpy(prog_buf, tok, CMS_MAX_PROGRAMME_LEN);
+        prog_buf[CMS_MAX_PROGRAMME_LEN] = '\0';
+        if (!cms_validate_programme(prog_buf)) { fclose(fp); return CMS_STATUS_PARSE_ERROR; }
+
+        tok = strtok_r(NULL, "\t\n", &saveptr);
+        if (tok == NULL) { fclose(fp); return CMS_STATUS_PARSE_ERROR; }
+        cms_trim_string(tok);
+        char *endptr = NULL;
+        float mark = strtof(tok, &endptr);
+        if (endptr == tok) { fclose(fp); return CMS_STATUS_PARSE_ERROR; }
+        if (!cms_validate_mark(mark)) { fclose(fp); return CMS_STATUS_PARSE_ERROR; }
+
+        /* Grow array if needed */
+        if (db->count >= db->capacity) {
+            size_t new_cap = db->capacity * CMS_GROWTH_FACTOR;
+            StudentRecord *new_mem = (StudentRecord *)realloc(db->records, new_cap * sizeof(StudentRecord));
+            if (new_mem == NULL) {
+                fclose(fp);
+                return CMS_STATUS_ERROR;
+            }
+            db->records = new_mem;
+            db->capacity = new_cap;
+        }
+
+        /* Append record */
+        StudentRecord *rec = &db->records[db->count];
+        rec->id = id;
+        strncpy(rec->name, name_buf, CMS_MAX_NAME_LEN);
+        rec->name[CMS_MAX_NAME_LEN] = '\0';
+        strncpy(rec->programme, prog_buf, CMS_MAX_PROGRAMME_LEN);
+        rec->programme[CMS_MAX_PROGRAMME_LEN] = '\0';
+        rec->mark = mark;
+
+        db->count++;
+    }
+
+    fclose(fp);
+
+    /* Store file path and flags */
+    strncpy(db->file_path, file_path, CMS_MAX_FILE_PATH_LEN - 1);
+    db->file_path[CMS_MAX_FILE_PATH_LEN - 1] = '\0';
+    db->is_loaded = true;
+    db->is_dirty = false;
+    printf("Loaded %zu record(s) from '%s'\n", db->count, db->file_path);
+    return CMS_STATUS_OK;
 }
 
 CMS_STATUS cms_database_save(StudentDatabase *db, const char *file_path) {
@@ -100,7 +213,13 @@ CMS_STATUS cms_database_show_all(const StudentDatabase *db) {
     }
 
     /* TODO: Print all records in formatted table */
-    return CMS_STATUS_NOT_IMPLEMENTED;
+    if (db->records == NULL || db->count == 0) {
+        printf("No records to display.\n");
+        return CMS_STATUS_INVALID_ARGUMENT;
+    } else {
+        cms_display_table(db);
+        return CMS_STATUS_OK;
+    }
 }
 
 CMS_STATUS cms_database_show_sorted(const StudentDatabase *db, char sort_key[32], char sort_order[32]) {

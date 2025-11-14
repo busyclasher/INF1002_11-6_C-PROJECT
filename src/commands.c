@@ -64,21 +64,20 @@ CMS_STATUS cmd_show(const StudentDatabase *db, const char *option, const char *o
         ord_buf[0] = '\0';
     }
 
-    if (cms_string_equals_ignore_case(opt_buf, "SUMMARY")) {
+    cms_string_to_upper(opt_buf);
+
+    if (strcmp(opt_buf,"SUMMARY") == 0) {
         return cms_display_summary(db);
     }
 
-    if (cms_string_equals_ignore_case(opt_buf, "ALL")) {
-        if (ord_buf[0] != '\0') {
-            return CMS_STATUS_INVALID_ARGUMENT;
-        }
+    if (strcmp(opt_buf, "ALL") == 0) {
         return cms_database_show_all(db);
     }
 
     CmsSortKey sort_key;
-    if (cms_string_equals_ignore_case(opt_buf, "ID")) {
+    if (strcmp(opt_buf, "ID") == 0) {
         sort_key = CMS_SORT_KEY_ID;
-    } else if (cms_string_equals_ignore_case(opt_buf, "MARK")) {
+    } else if (strcmp(opt_buf, "MARK") == 0) {
         sort_key = CMS_SORT_KEY_MARK;
     } else {
         return CMS_STATUS_INVALID_ARGUMENT;
@@ -86,16 +85,31 @@ CMS_STATUS cmd_show(const StudentDatabase *db, const char *option, const char *o
 
     CmsSortOrder sort_order = CMS_SORT_ASC;
     if (ord_buf[0] != '\0') {
-        if (cms_string_equals_ignore_case(ord_buf, "ASC")) {
+        if (strcmp(ord_buf, "ASC") == 0) {
             sort_order = CMS_SORT_ASC;
-        } else if (cms_string_equals_ignore_case(ord_buf, "DESC")) {
+        } else if (strcmp(ord_buf, "DESC") == 0) {
             sort_order = CMS_SORT_DESC;
         } else {
             return CMS_STATUS_INVALID_ARGUMENT;
         }
     }
 
-    return cms_database_show_sorted(db, sort_key, sort_order);
+    char key_str[32] = "";
+    char order_str[32] = "";
+
+    if (sort_key == CMS_SORT_KEY_ID) {
+        strcpy(key_str, "ID");
+    } else if (sort_key == CMS_SORT_KEY_MARK) {
+        strcpy(key_str, "MARK");
+    }
+
+    if (sort_order == CMS_SORT_ASC) {
+        strcpy(order_str, "ASC");
+    } else if (sort_order == CMS_SORT_DESC) {
+        strcpy(order_str, "DESC");
+    }
+    printf("Or did we get here?\n");
+    return cms_database_show_sorted(db, key_str, order_str);
 }
 
 CMS_STATUS cmd_insert(StudentDatabase *db) {
@@ -220,7 +234,23 @@ CMS_STATUS cms_parse_command(const char *input, StudentDatabase *db) {
     }
 
     /* TODO: Tokenize input */
+    
+    // Auto capitalise input
+    cms_string_to_upper((char *)input);
+    
     /* TODO: Match command keywords */
+    printf("Input command: %s\n", input);
+    if (strncmp(input, "OPEN", 4) == 0) {
+        char assumedFileLocation[255] = "./";
+        strcat(assumedFileLocation, input + 5);
+        strcat(assumedFileLocation, "\0");
+        cms_database_load(db, assumedFileLocation);
+        return CMS_STATUS_OK;
+    } else if (strncmp(input, "SHOW", 4) == 0) {
+        return cmd_show(db, "ALL", "ASC");
+    } else if (strncmp(input, "HELP", 4) == 0) {
+        return cmd_help();
+    }
     /* TODO: Call appropriate handler */
 
     return CMS_STATUS_NOT_IMPLEMENTED;

@@ -5,10 +5,17 @@
 #include "../include/config.h"
 
 bool cms_validate_student_id(int id) {
-    /* TODO: Implement student ID validation */
-    /* Should be a positive integer, typically 7 digits */
-    return id > 0;
+    // Basic validation: checks if the id is 7 digit.
+    int dividor = 1000000; // 1 and 6 zeroes
+    int result = id / dividor;
+    if (result < 1 || result > 9) {
+        return false;
+    } else {
+        return true;
+    }
 }
+
+
 
 bool cms_validate_name(const char *name) {
     /* TODO: Implement name validation */
@@ -42,12 +49,30 @@ bool cms_validate_mark(float mark) {
 }
 
 void cms_trim_string(char *str) {
-    /* TODO: Implement string trimming */
+    /* Remove leading and trailing whitespace */
     if (str == NULL) {
         return;
     }
 
-    /* TODO: Remove leading and trailing whitespace */
+    int len = strlen(str);
+    
+    /* Remove leading whitespace */
+    int start = 0;
+    while (start < len && isspace((unsigned char)str[start])) {
+        start++;
+    }
+
+    /* Remove trailing whitespace */
+    int end = len - 1;
+    while (end >= start && isspace((unsigned char)str[end])) {
+        end--;
+    }
+
+    /* Shift trimmed string and null-terminate */
+    if (start > 0) {
+        memmove(str, str + start, end - start + 2);
+    }
+    str[end - start + 1] = '\0';
 }
 
 void cms_string_to_upper(char *str) {
@@ -132,5 +157,56 @@ bool cms_read_string(const char *prompt, char *buffer, size_t size) {
 
     printf("%s", prompt);
     return cms_read_line(buffer, size);
+}
+
+/**
+ * Displays a formatted table of student records with ASCII borders.
+ * @param db Pointer to StudentDatabase structure containing records to display.
+ */
+void cms_display_table(const StudentDatabase *db) {
+    if (db == NULL) {
+        return;
+    }
+
+    int id_width = 12;
+    int name_width = 20;
+    int prog_width = 30;
+    int mark_width = 10;
+    
+    /* Print table header border */
+    printf("\n+%.*s+%.*s+%.*s+%.*s+\n", 
+           id_width, "------------", 
+           name_width, "--------------------", 
+           prog_width, "------------------------------", 
+           mark_width, "----------");
+    
+    /* Print column headers */
+    printf("| %-*s| %-*s| %-*s| %-*s|\n", 
+           id_width - 1, "ID", 
+           name_width - 1, "Name", 
+           prog_width - 1, "Programme", 
+           mark_width - 1, "Mark");
+    printf("+%.*s+%.*s+%.*s+%.*s+\n", 
+           id_width, "------------", 
+           name_width, "--------------------", 
+           prog_width, "------------------------------", 
+           mark_width, "----------");
+    
+    /* Print each student record */
+    for (size_t i = 0; i < db->count; i++) {
+        const StudentRecord *rec = &db->records[i];
+        printf("| %-*d| %-*s| %-*s| %-*.1f|\n",
+               id_width - 1, rec->id,
+               name_width - 1, rec->name,
+               prog_width - 1, rec->programme,
+               mark_width - 1, rec->mark);
+    }
+    
+    /* Print table footer border */
+    printf("+%.*s+%.*s+%.*s+%.*s+\n\n", 
+           id_width, "------------", 
+           name_width, "--------------------", 
+           prog_width, "------------------------------", 
+           mark_width, "----------");
 }
 
