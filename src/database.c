@@ -3,9 +3,12 @@
 #include <string.h>
 #include "database.h"
 #include "config.h"
+#include "utils.h"
 
 CMS_STATUS cms_database_init(StudentDatabase *db) {
-    /* Initialize database structure and allocate initial storage */
+    /* Initialize database structure and allocate initial storage.
+       After successful initialization the database contains no records
+       but is safe for OPEN/INSERT operations. */
     if (db == NULL) {
         return CMS_STATUS_INVALID_ARGUMENT;
     }
@@ -41,13 +44,54 @@ void cms_database_cleanup(StudentDatabase *db) {
     db->is_dirty = false;
 }
 
+static void cms_database_reset_runtime_state(StudentDatabase *db) {
+    if (db == NULL) {
+        return;
+    }
+    db->count = 0;
+    db->is_loaded = false;
+    db->is_dirty = false;
+}
+
 CMS_STATUS cms_database_load(StudentDatabase *db, const char *file_path) {
-    /* TODO: Implement database loading from file */
     if (db == NULL || file_path == NULL) {
         return CMS_STATUS_INVALID_ARGUMENT;
     }
 
-    /* TODO: Open file, parse records, populate database */
+    FILE *fp = fopen(file_path, "r");
+    if (fp == NULL) {
+        return CMS_STATUS_IO;
+    }
+
+    cms_database_reset_runtime_state(db);
+
+    char line[CMS_MAX_COMMAND_LEN];
+
+    /* Read and validate table name */
+    if (fgets(line, sizeof(line), fp) == NULL) {
+        fclose(fp);
+        return CMS_STATUS_PARSE_ERROR;
+    }
+
+    cms_trim_string(line);
+    if (strcmp(line, "Table Name: StudentRecords") != 0) {
+        fclose(fp);
+        return CMS_STATUS_PARSE_ERROR;
+    }
+
+    /* Read and validate column header line */
+    if (fgets(line, sizeof(line), fp) == NULL) {
+        fclose(fp);
+        return CMS_STATUS_PARSE_ERROR;
+    }
+
+    cms_trim_string(line);
+    if (strcmp(line, "ID\tName\tProgramme\tMark") != 0) {
+        fclose(fp);
+        return CMS_STATUS_PARSE_ERROR;
+    }
+
+    fclose(fp);
     return CMS_STATUS_NOT_IMPLEMENTED;
 }
 
