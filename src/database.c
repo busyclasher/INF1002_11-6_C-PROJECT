@@ -214,15 +214,46 @@ CMS_STATUS cms_database_save(StudentDatabase *db, const char *file_path)
 CMS_STATUS cms_database_insert(StudentDatabase *db, const StudentRecord *record)
 {
     /* TODO: Implement record insertion */
-    if (db == NULL || record == NULL)
+    if (db == NULL || record == NULL || !db->is_loaded)
     {
         return CMS_STATUS_INVALID_ARGUMENT;
     }
 
-    /* TODO: Check for duplicate ID */
-    /* TODO: Resize array if needed */
-    /* TODO: Add record to database */
-    return CMS_STATUS_NOT_IMPLEMENTED;
+    /* Check for duplicate ID */
+    for (size_t i = 0; i < db->count; i++)
+    {
+        if (db->records[i].id == record->id)
+        {
+            return CMS_STATUS_DUPLICATE;
+        }
+    }
+
+    /* Resize array if needed */
+    if (db->count >= db->capacity)
+    {
+        size_t new_cap = db->capacity * CMS_GROWTH_FACTOR;
+        StudentRecord *new_mem = (StudentRecord *)realloc(db->records, new_cap * sizeof(StudentRecord));
+        if (new_mem == NULL)
+        {
+            return CMS_STATUS_ERROR;
+        }
+        db->records = new_mem;
+        db->capacity = new_cap;
+    }
+
+    /* Add record to database */
+    StudentRecord *new_record = &db->records[db->count];
+    new_record->id = record->id;
+    strncpy(new_record->name, record->name, sizeof(new_record->name) - 1);
+    new_record->name[sizeof(new_record->name) - 1] = '\0';
+    strncpy(new_record->programme, record->programme, sizeof(new_record->programme) - 1);
+    new_record->programme[sizeof(new_record->programme) - 1] = '\0';
+    new_record->mark = record->mark;
+
+    db->count++;
+    db->is_dirty = true;
+
+    return CMS_STATUS_OK;
 }
 
 CMS_STATUS cms_database_query(const StudentDatabase *db, int student_id, StudentRecord *out_record)

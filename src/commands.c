@@ -137,22 +137,206 @@ CMS_STATUS cmd_show(const StudentDatabase *db, const char *option, const char *o
     {
         strcpy(order_str, "DESC");
     }
-    printf("Or did we get here?\n");
     return cms_database_show_sorted(db, key_str, order_str);
 }
 
-CMS_STATUS cmd_insert(StudentDatabase *db)
+CMS_STATUS cmd_insert(StudentDatabase *db, const char *params)
 {
-    /* TODO: Implement INSERT command */
     if (db == NULL)
     {
         return CMS_STATUS_INVALID_ARGUMENT;
     }
 
-    /* TODO: Prompt for student details */
-    /* TODO: Validate input */
-    /* TODO: Insert record */
-    return CMS_STATUS_NOT_IMPLEMENTED;
+    if (!db->is_loaded)
+    {
+        printf("CMS: No database is currently opened.\n");
+        return CMS_STATUS_INVALID_ARGUMENT;
+    }
+
+    StudentRecord record;
+    memset(&record, 0, sizeof(record));
+
+    bool has_id = false;
+    bool has_name = false;
+    bool has_programme = false;
+    bool has_mark = false;
+
+    char buffer[CMS_MAX_COMMAND_LEN];
+    if (params != NULL)
+    {
+        strncpy(buffer, params, sizeof(buffer) - 1);
+        buffer[sizeof(buffer) - 1] = '\0';
+        cms_trim_string(buffer);
+    }
+    else
+    {
+        buffer[0] = '\0';
+    }
+
+    /* Parse inline parameters if provided (e.g. "ID=2401234 NAME=MICHELLE LEE ...") */
+    if (buffer[0] != '\0')
+    {
+        char *ptr = buffer;
+        while (*ptr != '\0')
+        {
+            /* Skip leading spaces */
+            while (*ptr == ' ')
+            {
+                ptr++;
+            }
+            if (*ptr == '\0')
+            {
+                break;
+            }
+
+            char *eq = strchr(ptr, '=');
+            if (eq == NULL)
+            {
+                break; /* malformed, stop parsing further */
+            }
+
+            *eq = '\0';
+            char *key_start = ptr;
+            char *value_start = eq + 1;
+
+            /* Find end of value: before next KEY= token or end-of-string */
+            char *value_end = value_start;
+            while (*value_end != '\0')
+            {
+                if (*value_end == ' ')
+                {
+                    char *next = value_end + 1;
+                    if (strncmp(next, "ID=", 3) == 0 ||
+                        strncmp(next, "NAME=", 5) == 0 ||
+                        strncmp(next, "PROGRAMME=", 10) == 0 ||
+                        strncmp(next, "MARK=", 5) == 0)
+                    {
+                        break;
+                    }
+                }
+                value_end++;
+            }
+
+            char saved = *value_end;
+            *value_end = '\0';
+
+            cms_trim_string(key_start);
+            cms_trim_string(value_start);
+
+            if (strcmp(key_start, "ID") == 0)
+            {
+                record.id = atoi(value_start);
+                has_id = true;
+            }
+            else if (strcmp(key_start, "NAME") == 0)
+            {
+                strncpy(record.name, value_start, sizeof(record.name) - 1);
+                record.name[sizeof(record.name) - 1] = '\0';
+                has_name = true;
+            }
+            else if (strcmp(key_start, "PROGRAMME") == 0)
+            {
+                strncpy(record.programme, value_start, sizeof(record.programme) - 1);
+                record.programme[sizeof(record.programme) - 1] = '\0';
+                has_programme = true;
+            }
+            else if (strcmp(key_start, "MARK") == 0)
+            {
+                record.mark = (float)atof(value_start);
+                has_mark = true;
+            }
+
+            *value_end = saved;
+            ptr = value_end;
+        }
+    }
+
+    /* If ID not provided as a parameter, prompt for it */
+    if (!has_id)
+    {
+        int id = 0;
+        if (!cms_read_int("Enter student ID: ", &id))
+        {
+            printf("CMS: Invalid input for ID.\n");
+            return CMS_STATUS_INVALID_ARGUMENT;
+        }
+        record.id = id;
+        has_id = true;
+    }
+
+    /* Validate ID */
+    if (!cms_validate_student_id(record.id))
+    {
+        printf("CMS: Invalid student ID.\n");
+        return CMS_STATUS_INVALID_ARGUMENT;
+    }
+
+    /* Check for duplicate ID before asking for other fields */
+    for (size_t i = 0; i < db->count; ++i)
+    {
+        if (db->records[i].id == record.id)
+        {
+            printf("CMS: The record with ID=%d already exists.\n", record.id);
+            return CMS_STATUS_DUPLICATE;
+        }
+    }
+
+    /* Prompt for any missing fields (interactive mode) */
+    if (!has_name)
+    {
+        if (!cms_read_string("Enter name: ", record.name, sizeof(record.name)))
+        {
+            printf("CMS: Invalid input for name.\n");
+            return CMS_STATUS_INVALID_ARGUMENT;
+        }
+        cms_trim_string(record.name);
+    }
+
+    if (!has_programme)
+    {
+        if (!cms_read_string("Enter programme: ", record.programme, sizeof(record.programme)))
+        {
+            printf("CMS: Invalid input for programme.\n");
+            return CMS_STATUS_INVALID_ARGUMENT;
+        }
+        cms_trim_string(record.programme);
+    }
+
+    if (!has_mark)
+    {
+        float mark = 0.0f;
+        if (!cms_read_float("Enter mark (0-100): ", &mark))
+        {
+            printf("CMS: Invalid input for mark.\n");
+            return CMS_STATUS_INVALID_ARGUMENT;
+        }
+        record.mark = mark;
+    }
+
+    /* Validate remaining fields */
+    if (!cms_validate_name(record.name) ||
+        !cms_validate_programme(record.programme) ||
+        !cms_validate_mark(record.mark))
+    {
+        printf("CMS: Invalid data for new record.\n");
+        return CMS_STATUS_INVALID_ARGUMENT;
+    }
+
+    CMS_STATUS status = cms_database_insert(db, &record);
+    if (status == CMS_STATUS_OK)
+    {
+        printf("CMS: A new record with ID=%d is successfully inserted.\n", record.id);
+    }
+    else if (status == CMS_STATUS_DUPLICATE)
+    {
+        printf("CMS: The record with ID=%d already exists.\n", record.id);
+    }
+    else
+    {
+        printf("CMS: Failed to insert new record.\n");
+    }
+
+    return status;
 }
 
 CMS_STATUS cmd_query(const StudentDatabase *db, int student_id)
@@ -284,21 +468,30 @@ CMS_STATUS cms_parse_command(const char *input, StudentDatabase *db)
     /* TODO: Tokenize input */
 
     // Auto capitalise input
-    cms_string_to_upper((char *)input);
+    // cms_string_to_upper((char *)input);
+    cms_trim_string((char *)input);
 
     /* TODO: Match command keywords */
-    printf("Input command: %s\n", input);
     if (strncmp(input, "OPEN", 4) == 0)
     {
         char assumedFileLocation[255] = "./";
         strcat(assumedFileLocation, input + 5);
-        strcat(assumedFileLocation, "\0");
+        // Skip space if present
+        if (assumedFileLocation[0] == ' ')
+            memmove(assumedFileLocation, assumedFileLocation + 1, strlen(assumedFileLocation));
         cms_database_load(db, assumedFileLocation);
         return CMS_STATUS_OK;
     }
     else if (strncmp(input, "SHOW", 4) == 0)
     {
         return cmd_show(db, "ALL", "ASC");
+    }
+    else if (strncmp(input, "INSERT", 6) == 0)
+    {
+        const char *params = input + 6;
+        if (*params == ' ')
+            params++; // skip space
+        return cmd_insert(db, params);
     }
     else if (strncmp(input, "HELP", 4) == 0)
     {

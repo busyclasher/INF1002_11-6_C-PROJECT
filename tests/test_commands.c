@@ -119,7 +119,7 @@ void test_cmd_insert_valid(void)
 void test_cmd_insert_null_database(void)
 {
     /* TODO: Test INSERT with NULL database */
-    CMS_STATUS status = cmd_insert(NULL);
+    CMS_STATUS status = cmd_insert(NULL, NULL);
     TEST_ASSERT_EQUAL(CMS_STATUS_INVALID_ARGUMENT, status);
 }
 

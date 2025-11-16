@@ -6,7 +6,7 @@
 /* Command handler functions */
 CMS_STATUS cmd_open(StudentDatabase *db, const char *filename);
 CMS_STATUS cmd_show(const StudentDatabase *db, const char *option, const char *order);
-CMS_STATUS cmd_insert(StudentDatabase *db);
+CMS_STATUS cmd_insert(StudentDatabase *db, const char *params);
 CMS_STATUS cmd_query(const StudentDatabase *db, int student_id);
 CMS_STATUS cmd_update(StudentDatabase *db, int student_id);
 CMS_STATUS cmd_delete(StudentDatabase *db, int student_id);
