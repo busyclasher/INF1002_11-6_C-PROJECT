@@ -1,8 +1,10 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <ctype.h>
 #include "cms.h"
 #include "database.h"
 #include "commands.h"
+#include "utils.h"
 
 int main(void) {
     StudentDatabase db;
@@ -33,10 +35,40 @@ int main(void) {
         printf("You may use the OPEN command to load another file.\n\n");
     }
 
-    /* TODO: Start command loop */
     cms_command_loop(&db);
 
-    /* TODO: Cleanup database */
+    if (db.is_dirty) {
+        char response[8];
+        while (1) {
+            printf("Unsaved changes detected. Save before exiting? (Y/N): ");
+            if (!cms_read_line(response, sizeof(response))) {
+                printf("\nInput error detected. Exiting without saving.\n");
+                break;
+            }
+
+            if (response[0] == '\0') {
+                continue;
+            }
+
+            char choice = (char)toupper((unsigned char)response[0]);
+            if (choice == 'Y') {
+                CMS_STATUS save_status = cmd_save(&db, NULL);
+                if (save_status == CMS_STATUS_OK) {
+                    printf("Changes saved successfully.\n");
+                } else {
+                    printf("Failed to save changes.\n");
+                    cms_print_status(save_status);
+                }
+                break;
+            } else if (choice == 'N') {
+                printf("Changes not saved.\n");
+                break;
+            } else {
+                printf("Please enter 'Y' or 'N'.\n");
+            }
+        }
+    }
+
     cms_database_cleanup(&db);
 
     return EXIT_SUCCESS;
