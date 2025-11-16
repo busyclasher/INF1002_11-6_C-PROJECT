@@ -38,7 +38,6 @@ void cms_database_cleanup(StudentDatabase *db)
 
 CMS_STATUS cms_database_load(StudentDatabase *db, const char *file_path)
 {
-    /* TODO: Implement database loading from file */
     if (db == NULL || file_path == NULL)
     {
         return CMS_STATUS_INVALID_ARGUMENT;
@@ -48,6 +47,10 @@ CMS_STATUS cms_database_load(StudentDatabase *db, const char *file_path)
     if (fp == NULL)
     {
         return CMS_STATUS_IO;
+    }
+
+    if (db != NULL){
+        cms_database_cleanup(db);
     }
 
     char line[1024];
