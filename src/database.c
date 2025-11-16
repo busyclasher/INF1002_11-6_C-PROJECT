@@ -5,14 +5,18 @@
 #include "config.h"
 
 CMS_STATUS cms_database_init(StudentDatabase *db) {
-    /* TODO: Implement database initialization */
+    /* Initialize database structure and allocate initial storage */
     if (db == NULL) {
         return CMS_STATUS_INVALID_ARGUMENT;
     }
 
-    db->records = NULL;
+    db->records = malloc(sizeof(StudentRecord) * CMS_INITIAL_CAPACITY);
+    if (db->records == NULL) {
+        return CMS_STATUS_ERROR;
+    }
+
     db->count = 0;
-    db->capacity = 0;
+    db->capacity = CMS_INITIAL_CAPACITY;
     db->file_path[0] = '\0';
     db->is_loaded = false;
     db->is_dirty = false;
@@ -21,13 +25,20 @@ CMS_STATUS cms_database_init(StudentDatabase *db) {
 }
 
 void cms_database_cleanup(StudentDatabase *db) {
-    /* TODO: Implement database cleanup */
-    if (db != NULL && db->records != NULL) {
+    if (db == NULL) {
+        return;
+    }
+
+    if (db->records != NULL) {
         free(db->records);
         db->records = NULL;
-        db->count = 0;
-        db->capacity = 0;
     }
+
+    db->count = 0;
+    db->capacity = 0;
+    db->file_path[0] = '\0';
+    db->is_loaded = false;
+    db->is_dirty = false;
 }
 
 CMS_STATUS cms_database_load(StudentDatabase *db, const char *file_path) {
