@@ -22,6 +22,17 @@ int main(void) {
     printf("Type 'HELP' for the list of commands.\n");
     printf("Default database: %s\n\n", CMS_DEFAULT_DATABASE_FILE);
 
+    /* Attempt to open default database file */
+    printf("Loading default database...\n");
+    status = cmd_open(&db, CMS_DEFAULT_DATABASE_FILE);
+    if (status == CMS_STATUS_OK) {
+        printf("Successfully loaded '%s'.\n\n", CMS_DEFAULT_DATABASE_FILE);
+    } else {
+        printf("Warning: Failed to load '%s'.\n", CMS_DEFAULT_DATABASE_FILE);
+        cms_print_status(status);
+        printf("You may use the OPEN command to load another file.\n\n");
+    }
+
     /* TODO: Start command loop */
     cms_command_loop(&db);
 
