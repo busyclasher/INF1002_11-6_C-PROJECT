@@ -6,7 +6,8 @@
 #include "config.h"
 
 /* Status codes for CMS operations */
-typedef enum {
+typedef enum
+{
     CMS_STATUS_OK = 0,
     CMS_STATUS_ERROR,
     CMS_STATUS_INVALID_ARGUMENT,
@@ -18,7 +19,8 @@ typedef enum {
 } CMS_STATUS;
 
 /* Student record structure */
-typedef struct StudentRecord {
+typedef struct StudentRecord
+{
     int id;
     char name[CMS_MAX_NAME_LEN + 1];
     char programme[CMS_MAX_PROGRAMME_LEN + 1];
@@ -26,7 +28,8 @@ typedef struct StudentRecord {
 } StudentRecord;
 
 /* Database structure */
-typedef struct StudentDatabase {
+typedef struct StudentDatabase
+{
     StudentRecord *records;
     size_t count;
     size_t capacity;
@@ -36,11 +39,10 @@ typedef struct StudentDatabase {
 } StudentDatabase;
 
 /* Status message handling */
-const char* cms_status_message(CMS_STATUS status);
+const char *cms_status_message(CMS_STATUS status);
 void cms_print_status(CMS_STATUS status);
 
 /* Declaration function (not yet implemented) */
 CMS_STATUS cms_print_declaration(void);
 
 #endif /* CMS_H */
-

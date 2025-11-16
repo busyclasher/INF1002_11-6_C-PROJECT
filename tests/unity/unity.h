@@ -7,11 +7,12 @@
 /* Unity Test Framework - Simplified Version */
 
 /* Test result tracking */
-typedef struct {
+typedef struct
+{
     int tests_run;
     int tests_failed;
     int tests_ignored;
-    const char* current_test_name;
+    const char *current_test_name;
     jmp_buf abort_frame;
     int within_test;
 } Unity;
@@ -19,24 +20,24 @@ typedef struct {
 extern Unity Unity_instance;
 
 /* Core Unity Functions */
-void UnityBegin(const char* filename);
+void UnityBegin(const char *filename);
 int UnityEnd(void);
-void UnityDefaultTestRun(void (*func)(void), const char* name, int line);
+void UnityDefaultTestRun(void (*func)(void), const char *name, int line);
 
 /* Setup and Teardown */
 void setUp(void);
 void tearDown(void);
 
 /* Test Assertions */
-void UnityAssertEqualNumber(const int expected, const int actual, const char* msg, const int line);
-void UnityAssertEqualFloat(const float expected, const float actual, const float delta, const char* msg, const int line);
-void UnityAssertEqualString(const char* expected, const char* actual, const char* msg, const int line);
-void UnityAssertNull(const void* pointer, const char* msg, const int line);
-void UnityAssertNotNull(const void* pointer, const char* msg, const int line);
-void UnityAssertTrue(const int condition, const char* msg, const int line);
-void UnityAssertFalse(const int condition, const char* msg, const int line);
-void UnityFail(const char* msg, const int line);
-void UnityIgnore(const char* msg, const int line);
+void UnityAssertEqualNumber(const int expected, const int actual, const char *msg, const int line);
+void UnityAssertEqualFloat(const float expected, const float actual, const float delta, const char *msg, const int line);
+void UnityAssertEqualString(const char *expected, const char *actual, const char *msg, const int line);
+void UnityAssertNull(const void *pointer, const char *msg, const int line);
+void UnityAssertNotNull(const void *pointer, const char *msg, const int line);
+void UnityAssertTrue(const int condition, const char *msg, const int line);
+void UnityAssertFalse(const int condition, const char *msg, const int line);
+void UnityFail(const char *msg, const int line);
+void UnityIgnore(const char *msg, const int line);
 
 /* Macro Helpers */
 #define RUN_TEST(func) UnityDefaultTestRun(func, #func, __LINE__)
@@ -84,8 +85,7 @@ void UnityIgnore(const char* msg, const int line);
     UnityPrint(message)
 
 /* Print helpers */
-void UnityPrint(const char* string);
+void UnityPrint(const char *string);
 void UnityPrintNumber(const int number);
 
 #endif /* UNITY_FRAMEWORK_H */
-

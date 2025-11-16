@@ -20,4 +20,3 @@ void cms_command_loop(StudentDatabase *db);
 CMS_STATUS cms_parse_command(const char *input, StudentDatabase *db);
 
 #endif /* CMS_COMMANDS_H */
-

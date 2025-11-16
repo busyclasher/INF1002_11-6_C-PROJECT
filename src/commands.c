@@ -13,13 +13,16 @@
  * @param filename Path to the database file (uses CMS_DEFAULT_DATABASE_FILE if NULL or empty).
  * @return CMS_STATUS_OK on success, CMS_STATUS_INVALID_ARGUMENT or error code otherwise.
  */
-CMS_STATUS cmd_open(StudentDatabase *db, const char *filename) {
-    if (db == NULL) {
+CMS_STATUS cmd_open(StudentDatabase *db, const char *filename)
+{
+    if (db == NULL)
+    {
         return CMS_STATUS_INVALID_ARGUMENT;
     }
 
     char path_buffer[CMS_MAX_FILE_PATH_LEN];
-    if (filename == NULL || filename[0] == '\0') {
+    if (filename == NULL || filename[0] == '\0')
+    {
         filename = CMS_DEFAULT_DATABASE_FILE;
     }
 
@@ -27,7 +30,8 @@ CMS_STATUS cmd_open(StudentDatabase *db, const char *filename) {
     path_buffer[sizeof(path_buffer) - 1] = '\0';
     cms_trim_string(path_buffer);
 
-    if (path_buffer[0] == '\0') {
+    if (path_buffer[0] == '\0')
+    {
         return CMS_STATUS_INVALID_ARGUMENT;
     }
 
@@ -41,11 +45,14 @@ CMS_STATUS cmd_open(StudentDatabase *db, const char *filename) {
  * @param order Sort order for "ID" or "MARK": "ASC" or "DESC".
  * @return CMS_STATUS_OK on success, CMS_STATUS_INVALID_ARGUMENT or error code otherwise.
  */
-CMS_STATUS cmd_show(const StudentDatabase *db, const char *option, const char *order) {
-    if (db == NULL) {
+CMS_STATUS cmd_show(const StudentDatabase *db, const char *option, const char *order)
+{
+    if (db == NULL)
+    {
         return CMS_STATUS_INVALID_ARGUMENT;
     }
-    if (option == NULL) {
+    if (option == NULL)
+    {
         return CMS_STATUS_INVALID_ARGUMENT;
     }
 
@@ -56,40 +63,56 @@ CMS_STATUS cmd_show(const StudentDatabase *db, const char *option, const char *o
     opt_buf[sizeof(opt_buf) - 1] = '\0';
     cms_trim_string(opt_buf);
 
-    if (order) {
+    if (order)
+    {
         strncpy(ord_buf, order, sizeof(ord_buf) - 1);
         ord_buf[sizeof(ord_buf) - 1] = '\0';
         cms_trim_string(ord_buf);
-    } else {
+    }
+    else
+    {
         ord_buf[0] = '\0';
     }
 
     cms_string_to_upper(opt_buf);
 
-    if (strcmp(opt_buf,"SUMMARY") == 0) {
+    if (strcmp(opt_buf, "SUMMARY") == 0)
+    {
         return cms_display_summary(db);
     }
 
-    if (strcmp(opt_buf, "ALL") == 0) {
+    if (strcmp(opt_buf, "ALL") == 0)
+    {
         return cms_database_show_all(db);
     }
 
     CmsSortKey sort_key;
-    if (strcmp(opt_buf, "ID") == 0) {
+    if (strcmp(opt_buf, "ID") == 0)
+    {
         sort_key = CMS_SORT_KEY_ID;
-    } else if (strcmp(opt_buf, "MARK") == 0) {
+    }
+    else if (strcmp(opt_buf, "MARK") == 0)
+    {
         sort_key = CMS_SORT_KEY_MARK;
-    } else {
+    }
+    else
+    {
         return CMS_STATUS_INVALID_ARGUMENT;
     }
 
     CmsSortOrder sort_order = CMS_SORT_ASC;
-    if (ord_buf[0] != '\0') {
-        if (strcmp(ord_buf, "ASC") == 0) {
+    if (ord_buf[0] != '\0')
+    {
+        if (strcmp(ord_buf, "ASC") == 0)
+        {
             sort_order = CMS_SORT_ASC;
-        } else if (strcmp(ord_buf, "DESC") == 0) {
+        }
+        else if (strcmp(ord_buf, "DESC") == 0)
+        {
             sort_order = CMS_SORT_DESC;
-        } else {
+        }
+        else
+        {
             return CMS_STATUS_INVALID_ARGUMENT;
         }
     }
@@ -97,24 +120,32 @@ CMS_STATUS cmd_show(const StudentDatabase *db, const char *option, const char *o
     char key_str[32] = "";
     char order_str[32] = "";
 
-    if (sort_key == CMS_SORT_KEY_ID) {
+    if (sort_key == CMS_SORT_KEY_ID)
+    {
         strcpy(key_str, "ID");
-    } else if (sort_key == CMS_SORT_KEY_MARK) {
+    }
+    else if (sort_key == CMS_SORT_KEY_MARK)
+    {
         strcpy(key_str, "MARK");
     }
 
-    if (sort_order == CMS_SORT_ASC) {
+    if (sort_order == CMS_SORT_ASC)
+    {
         strcpy(order_str, "ASC");
-    } else if (sort_order == CMS_SORT_DESC) {
+    }
+    else if (sort_order == CMS_SORT_DESC)
+    {
         strcpy(order_str, "DESC");
     }
     printf("Or did we get here?\n");
     return cms_database_show_sorted(db, key_str, order_str);
 }
 
-CMS_STATUS cmd_insert(StudentDatabase *db) {
+CMS_STATUS cmd_insert(StudentDatabase *db)
+{
     /* TODO: Implement INSERT command */
-    if (db == NULL) {
+    if (db == NULL)
+    {
         return CMS_STATUS_INVALID_ARGUMENT;
     }
 
@@ -124,25 +155,30 @@ CMS_STATUS cmd_insert(StudentDatabase *db) {
     return CMS_STATUS_NOT_IMPLEMENTED;
 }
 
-CMS_STATUS cmd_query(const StudentDatabase *db, int student_id) {
+CMS_STATUS cmd_query(const StudentDatabase *db, int student_id)
+{
     /* TODO: Implement QUERY command */
-    if (db == NULL) {
+    if (db == NULL)
+    {
         return CMS_STATUS_INVALID_ARGUMENT;
     }
 
     StudentRecord record;
     CMS_STATUS status = cms_database_query(db, student_id, &record);
-    
-    if (status == CMS_STATUS_OK) {
+
+    if (status == CMS_STATUS_OK)
+    {
         cms_database_show_record(&record);
     }
 
     return status;
 }
 
-CMS_STATUS cmd_update(StudentDatabase *db, int student_id) {
+CMS_STATUS cmd_update(StudentDatabase *db, int student_id)
+{
     /* TODO: Implement UPDATE command */
-    if (db == NULL) {
+    if (db == NULL)
+    {
         return CMS_STATUS_INVALID_ARGUMENT;
     }
 
@@ -152,13 +188,14 @@ CMS_STATUS cmd_update(StudentDatabase *db, int student_id) {
     return CMS_STATUS_NOT_IMPLEMENTED;
 }
 
-CMS_STATUS cmd_delete(StudentDatabase *db, int student_id) {
+CMS_STATUS cmd_delete(StudentDatabase *db, int student_id)
+{
     /* TODO: Implement DELETE command */
-    if (db == NULL) {
+    if (db == NULL)
+    {
         return CMS_STATUS_INVALID_ARGUMENT;
     }
 
-    
     // StudentRecord *recordPointer = NULL;
 
     // for (size_t i = 0; i < db->count; i++) {
@@ -179,9 +216,11 @@ CMS_STATUS cmd_delete(StudentDatabase *db, int student_id) {
     return cms_database_delete(db, student_id);
 }
 
-CMS_STATUS cmd_save(StudentDatabase *db, const char *filename) {
+CMS_STATUS cmd_save(StudentDatabase *db, const char *filename)
+{
     /* TODO: Implement SAVE command */
-    if (db == NULL) {
+    if (db == NULL)
+    {
         return CMS_STATUS_INVALID_ARGUMENT;
     }
 
@@ -189,7 +228,8 @@ CMS_STATUS cmd_save(StudentDatabase *db, const char *filename) {
     return cms_database_save(db, save_path);
 }
 
-CMS_STATUS cmd_help(void) {
+CMS_STATUS cmd_help(void)
+{
     /* TODO: Implement HELP command */
     printf("\nAvailable Commands:\n");
     printf("  OPEN <filename>              - Load a database file\n");
@@ -205,54 +245,66 @@ CMS_STATUS cmd_help(void) {
     return CMS_STATUS_OK;
 }
 
-void cms_command_loop(StudentDatabase *db) {
+void cms_command_loop(StudentDatabase *db)
+{
     /* TODO: Implement main command loop */
     char input[CMS_MAX_COMMAND_LEN];
 
-    while (1) {
+    while (1)
+    {
         printf("CMS> ");
-        
-        if (!cms_read_line(input, CMS_MAX_COMMAND_LEN)) {
+
+        if (!cms_read_line(input, CMS_MAX_COMMAND_LEN))
+        {
             break;
         }
 
         /* TODO: Parse and execute command */
         CMS_STATUS status = cms_parse_command(input, db);
-        
-        if (status == CMS_STATUS_OK) {
+
+        if (status == CMS_STATUS_OK)
+        {
             /* Command executed successfully */
-        } else if (status == CMS_STATUS_NOT_IMPLEMENTED) {
+        }
+        else if (status == CMS_STATUS_NOT_IMPLEMENTED)
+        {
             printf("Command not yet implemented\n");
         }
     }
 }
 
-CMS_STATUS cms_parse_command(const char *input, StudentDatabase *db) {
+CMS_STATUS cms_parse_command(const char *input, StudentDatabase *db)
+{
     /* TODO: Implement command parsing */
-    if (input == NULL || db == NULL) {
+    if (input == NULL || db == NULL)
+    {
         return CMS_STATUS_INVALID_ARGUMENT;
     }
 
     /* TODO: Tokenize input */
-    
+
     // Auto capitalise input
     cms_string_to_upper((char *)input);
-    
+
     /* TODO: Match command keywords */
     printf("Input command: %s\n", input);
-    if (strncmp(input, "OPEN", 4) == 0) {
+    if (strncmp(input, "OPEN", 4) == 0)
+    {
         char assumedFileLocation[255] = "./";
         strcat(assumedFileLocation, input + 5);
         strcat(assumedFileLocation, "\0");
         cms_database_load(db, assumedFileLocation);
         return CMS_STATUS_OK;
-    } else if (strncmp(input, "SHOW", 4) == 0) {
+    }
+    else if (strncmp(input, "SHOW", 4) == 0)
+    {
         return cmd_show(db, "ALL", "ASC");
-    } else if (strncmp(input, "HELP", 4) == 0) {
+    }
+    else if (strncmp(input, "HELP", 4) == 0)
+    {
         return cmd_help();
     }
     /* TODO: Call appropriate handler */
 
     return CMS_STATUS_NOT_IMPLEMENTED;
 }
-

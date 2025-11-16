@@ -19,4 +19,3 @@
 #define CMS_GROWTH_FACTOR 2
 
 #endif /* CMS_CONFIG_H */
-

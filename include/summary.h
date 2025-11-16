@@ -3,19 +3,22 @@
 
 #include "cms.h"
 
-typedef enum CmsSortKey {
+typedef enum CmsSortKey
+{
     CMS_SORT_KEY_NONE = 0,
     CMS_SORT_KEY_ID,
     CMS_SORT_KEY_MARK
 } CmsSortKey;
 
-typedef enum CmsSortOrder {
+typedef enum CmsSortOrder
+{
     CMS_SORT_ASC = 0,
     CMS_SORT_DESC
 } CmsSortOrder;
 
 /* Sort order enumeration */
-typedef enum {
+typedef enum
+{
     SORT_ASCENDING,
     SORT_DESCENDING
 } SortOrder;
@@ -25,7 +28,8 @@ CMS_STATUS cms_sort_by_id(StudentDatabase *db, SortOrder order);
 CMS_STATUS cms_sort_by_mark(StudentDatabase *db, SortOrder order);
 
 /* Summary statistics */
-typedef struct {
+typedef struct
+{
     size_t count;
     float average;
     float highest;
@@ -38,4 +42,3 @@ CMS_STATUS cms_calculate_summary(const StudentDatabase *db, SummaryStats *stats)
 CMS_STATUS cms_display_summary(const StudentDatabase *db);
 
 #endif /* CMS_SUMMARY_H */
-

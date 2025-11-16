@@ -24,4 +24,3 @@ bool cms_read_string(const char *prompt, char *buffer, size_t size);
 void cms_display_table(const StudentDatabase *db);
 
 #endif /* CMS_UTILS_H */
-
