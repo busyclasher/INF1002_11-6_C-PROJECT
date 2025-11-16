@@ -15,9 +15,12 @@ int main(void) {
         return EXIT_FAILURE;
     }
 
-    /* TODO: Print welcome message */
-    printf("Student Records CMS\n");
-    printf("Type 'HELP' for available commands\n\n");
+    /* Print welcome message */
+    printf("=====================================\n");
+    printf("       Student Records CMS\n");
+    printf("=====================================\n");
+    printf("Type 'HELP' for the list of commands.\n");
+    printf("Default database: %s\n\n", CMS_DEFAULT_DATABASE_FILE);
 
     /* TODO: Start command loop */
     cms_command_loop(&db);
