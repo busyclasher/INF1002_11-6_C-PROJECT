@@ -38,14 +38,12 @@ void cms_database_cleanup(StudentDatabase *db)
 
 CMS_STATUS cms_database_load(StudentDatabase *db, const char *file_path)
 {
-    if (db == NULL || file_path == NULL)
-    {
+    if (db == NULL || file_path == NULL){
         return CMS_STATUS_INVALID_ARGUMENT;
     }
 
     FILE *fp = fopen(file_path, "r");
-    if (fp == NULL)
-    {
+    if (fp == NULL){
         return CMS_STATUS_IO;
     }
 
@@ -57,8 +55,7 @@ CMS_STATUS cms_database_load(StudentDatabase *db, const char *file_path)
     size_t line_no = 0;
 
     /* Ensure database has initial capacity */
-    if (db->records == NULL)
-    {
+    if (db->records == NULL){        
         db->capacity = CMS_INITIAL_CAPACITY;
         db->records = (StudentRecord *)malloc(db->capacity * sizeof(StudentRecord));
         if (db->records == NULL)
@@ -69,114 +66,119 @@ CMS_STATUS cms_database_load(StudentDatabase *db, const char *file_path)
         db->count = 0;
     }
 
-    /* Read file line-by-line. Skip first two header lines if present. */
-    while (fgets(line, sizeof(line), fp) != NULL)
-    {
+    // Reads the file line by line
+    while (fgets(line, sizeof(line), fp) != NULL){
         line_no++;
 
-        /* Trim whitespace */
+        // Trim whitespace
         cms_trim_string(line);
 
-        /* Skip empty lines */
-        if (line[0] == '\0')
-        {
+        // Skips empty lines
+        if (line[0] == '\0'){
             continue;
         }
 
-        /* Skip header lines (common in sample format) */
-        if (line_no == 1)
-        {
-            /* e.g. "Table Name: StudentRecords" */
-            continue;
+        // Skips the table name line
+        if (line_no == 1) {
+            /* Check whether the first non-empty line is a "Table Name:" header (case-insensitive) */
+            char tmp[1024];
+            strncpy(tmp, line, sizeof(tmp) - 1);
+            tmp[sizeof(tmp) - 1] = '\0';
+            cms_trim_string(tmp);
+            cms_string_to_upper(tmp);
+
+            if (strncmp(tmp, "TABLE NAME:", 11) == 0 || strstr(tmp, "TABLE NAME:") != NULL) {
+                /* It's a table-name line; skip it */
+                continue;
+            } else {
+                
+            }
         }
-        if (line_no == 2)
-        {
-            /* header row: "ID\tName\tProgramme\tMark" */
+
+        // Skips the column headers
+        if (line_no == 2){
             continue;
         }
 
-        /* Tokenize by tab characters (fields expected: ID, Name, Programme, Mark) */
+        /* separate by tab characters (fields expected: ID, Name, Programme, Mark) */
         char *saveptr = NULL;
         char *tok = NULL;
 
         tok = strtok_r(line, "\t", &saveptr);
-        if (tok == NULL)
-        {
+        if (tok == NULL){
             fclose(fp);
             return CMS_STATUS_PARSE_ERROR;
         }
+
         cms_trim_string(tok);
         int id = atoi(tok);
-        if (!cms_validate_student_id(id))
-        {
+
+        if (!cms_validate_student_id(id)){
             fclose(fp);
             return CMS_STATUS_PARSE_ERROR;
         }
 
         char name_buf[CMS_MAX_NAME_LEN + 1] = {0};
         tok = strtok_r(NULL, "\t", &saveptr);
-        if (tok == NULL)
-        {
+
+        if (tok == NULL){
             fclose(fp);
             return CMS_STATUS_PARSE_ERROR;
         }
+
         cms_trim_string(tok);
         strncpy(name_buf, tok, CMS_MAX_NAME_LEN);
         name_buf[CMS_MAX_NAME_LEN] = '\0';
-        if (!cms_validate_name(name_buf))
-        {
+
+        if (!cms_validate_name(name_buf)){
             fclose(fp);
             return CMS_STATUS_PARSE_ERROR;
         }
 
         char prog_buf[CMS_MAX_PROGRAMME_LEN + 1] = {0};
         tok = strtok_r(NULL, "\t", &saveptr);
-        if (tok == NULL)
-        {
+        if (tok == NULL){
             fclose(fp);
             return CMS_STATUS_PARSE_ERROR;
         }
+
         cms_trim_string(tok);
         strncpy(prog_buf, tok, CMS_MAX_PROGRAMME_LEN);
         prog_buf[CMS_MAX_PROGRAMME_LEN] = '\0';
-        if (!cms_validate_programme(prog_buf))
-        {
+
+        if (!cms_validate_programme(prog_buf)){
             fclose(fp);
             return CMS_STATUS_PARSE_ERROR;
         }
 
         tok = strtok_r(NULL, "\t\n", &saveptr);
-        if (tok == NULL)
-        {
+        if (tok == NULL){
             fclose(fp);
             return CMS_STATUS_PARSE_ERROR;
         }
         cms_trim_string(tok);
         char *endptr = NULL;
         float mark = strtof(tok, &endptr);
-        if (endptr == tok)
-        {
+        if (endptr == tok){
             fclose(fp);
             return CMS_STATUS_PARSE_ERROR;
         }
-        if (!cms_validate_mark(mark))
-        {
+        if (!cms_validate_mark(mark)){
             fclose(fp);
             return CMS_STATUS_PARSE_ERROR;
         }
 
         /* Grow array if needed */
-        if (db->count >= db->capacity)
-        {
-            size_t new_cap = db->capacity * CMS_GROWTH_FACTOR;
-            StudentRecord *new_mem = (StudentRecord *)realloc(db->records, new_cap * sizeof(StudentRecord));
-            if (new_mem == NULL)
-            {
+        if (db->count >= db->capacity){
+            size_t newCapacity = db->capacity * CMS_GROWTH_FACTOR;
+            StudentRecord *newMemSize = (StudentRecord *)realloc(db->records, newCapacity * sizeof(StudentRecord));
+            if (newMemSize == NULL){
                 fclose(fp);
                 return CMS_STATUS_ERROR;
             }
-            db->records = new_mem;
-            db->capacity = new_cap;
+            
+            db->records = newMemSize;
+            db->capacity = newCapacity;
         }
 
         /* Append record */
