@@ -28,6 +28,23 @@ static CMS_STATUS cms_ensure_capacity(StudentDatabase *db) {
     return CMS_STATUS_OK;
 }
 
+static bool cms_database_find_index(const StudentDatabase *db, int student_id, size_t *out_index) {
+    if (db == NULL || db->records == NULL) {
+        return false;
+    }
+
+    for (size_t i = 0; i < db->count; i++) {
+        if (db->records[i].id == student_id) {
+            if (out_index != NULL) {
+                *out_index = i;
+            }
+            return true;
+        }
+    }
+
+    return false;
+}
+
 CMS_STATUS cms_database_init(StudentDatabase *db) {
     /* Initialize database structure and allocate initial storage.
        After successful initialization the database contains no records
@@ -207,8 +224,17 @@ CMS_STATUS cms_database_query(const StudentDatabase *db, int student_id, Student
         return CMS_STATUS_INVALID_ARGUMENT;
     }
 
-    /* TODO: Search for record by ID */
-    return CMS_STATUS_NOT_FOUND;
+    if (db->records == NULL || db->count == 0 || (!db->is_loaded && db->count == 0)) {
+        return CMS_STATUS_NOT_FOUND;
+    }
+
+    size_t index = 0;
+    if (!cms_database_find_index(db, student_id, &index)) {
+        return CMS_STATUS_NOT_FOUND;
+    }
+
+    *out_record = db->records[index];
+    return CMS_STATUS_OK;
 }
 
 CMS_STATUS cms_database_update(StudentDatabase *db, int student_id, const StudentRecord *new_record) {
