@@ -217,6 +217,7 @@ typedef struct StudentDatabase {
 - The database uses dynamic memory allocation for storing records
 - Records are automatically resized as needed
 - The system tracks unsaved changes with the `is_dirty` flag
+- After `cms_database_init()` completes successfully, the database is empty but ready for `OPEN`, `INSERT`, or other operations
 - All string operations include bounds checking
 - Input validation prevents invalid data entry
 
