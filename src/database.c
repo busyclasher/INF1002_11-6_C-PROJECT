@@ -217,8 +217,36 @@ CMS_STATUS cms_database_update(StudentDatabase *db, int student_id, const Studen
         return CMS_STATUS_INVALID_ARGUMENT;
     }
 
-    /* TODO: Find record and update fields */
-    return CMS_STATUS_NOT_IMPLEMENTED;
+    if (!cms_validate_student_id(student_id)) {
+        return CMS_STATUS_INVALID_ARGUMENT;
+    }
+
+    if (!cms_validate_name(new_record->name) ||
+        !cms_validate_programme(new_record->programme) ||
+        !cms_validate_mark(new_record->mark)) {
+        return CMS_STATUS_INVALID_ARGUMENT;
+    }
+
+    if (db->records == NULL || db->count == 0) {
+        return CMS_STATUS_NOT_FOUND;
+    }
+
+    size_t index = 0;
+    if (!cms_database_find_index(db, student_id, &index)) {
+        return CMS_STATUS_NOT_FOUND;
+    }
+
+    StudentRecord *target = &db->records[index];
+    target->id = student_id;
+    strncpy(target->name, new_record->name, CMS_MAX_NAME_LEN);
+    target->name[CMS_MAX_NAME_LEN] = '\0';
+    strncpy(target->programme, new_record->programme, CMS_MAX_PROGRAMME_LEN);
+    target->programme[CMS_MAX_PROGRAMME_LEN] = '\0';
+    target->mark = new_record->mark;
+
+    db->is_dirty = true;
+
+    return CMS_STATUS_OK;
 }
 
 CMS_STATUS cms_database_delete(StudentDatabase *db, int student_id) {
