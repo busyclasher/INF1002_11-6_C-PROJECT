@@ -5,6 +5,29 @@
 #include "config.h"
 #include "utils.h"
 
+static CMS_STATUS cms_ensure_capacity(StudentDatabase *db) {
+    if (db == NULL) {
+        return CMS_STATUS_INVALID_ARGUMENT;
+    }
+
+    if (db->count < db->capacity) {
+        return CMS_STATUS_OK;
+    }
+
+    size_t new_capacity = (db->capacity == 0)
+        ? CMS_INITIAL_CAPACITY
+        : db->capacity * CMS_GROWTH_FACTOR;
+
+    StudentRecord *new_records = realloc(db->records, new_capacity * sizeof(StudentRecord));
+    if (new_records == NULL) {
+        return CMS_STATUS_ERROR;
+    }
+
+    db->records = new_records;
+    db->capacity = new_capacity;
+    return CMS_STATUS_OK;
+}
+
 CMS_STATUS cms_database_init(StudentDatabase *db) {
     /* Initialize database structure and allocate initial storage.
        After successful initialization the database contains no records
@@ -91,15 +114,74 @@ CMS_STATUS cms_database_load(StudentDatabase *db, const char *file_path) {
         return CMS_STATUS_PARSE_ERROR;
     }
 
+    CMS_STATUS status = CMS_STATUS_OK;
+    while (fgets(line, sizeof(line), fp) != NULL) {
+        cms_trim_string(line);
+        if (line[0] == '\0') {
+            continue;
+        }
+
+        char *id_str = strtok(line, "\t");
+        char *name = strtok(NULL, "\t");
+        char *programme = strtok(NULL, "\t");
+        char *mark_str = strtok(NULL, "\t");
+
+        if (!id_str || !name || !programme || !mark_str) {
+            status = CMS_STATUS_PARSE_ERROR;
+            break;
+        }
+
+        cms_trim_string(id_str);
+        cms_trim_string(name);
+        cms_trim_string(programme);
+        cms_trim_string(mark_str);
+
+        int id = atoi(id_str);
+        if (!cms_validate_student_id(id)) {
+            status = CMS_STATUS_PARSE_ERROR;
+            break;
+        }
+
+        if (!cms_validate_name(name) || !cms_validate_programme(programme)) {
+            status = CMS_STATUS_PARSE_ERROR;
+            break;
+        }
+
+        char *endptr = NULL;
+        float mark = strtof(mark_str, &endptr);
+        if (endptr == mark_str || !cms_validate_mark(mark)) {
+            status = CMS_STATUS_PARSE_ERROR;
+            break;
+        }
+
+        status = cms_ensure_capacity(db);
+        if (status != CMS_STATUS_OK) {
+            break;
+        }
+
+        StudentRecord *record = &db->records[db->count];
+        record->id = id;
+        strncpy(record->name, name, CMS_MAX_NAME_LEN);
+        record->name[CMS_MAX_NAME_LEN] = '\0';
+        strncpy(record->programme, programme, CMS_MAX_PROGRAMME_LEN);
+        record->programme[CMS_MAX_PROGRAMME_LEN] = '\0';
+        record->mark = mark;
+        db->count++;
+    }
+
+    if (status != CMS_STATUS_OK) {
+        cms_database_reset_runtime_state(db);
+        fclose(fp);
+        return status;
+    }
+
     fclose(fp);
-    return CMS_STATUS_NOT_IMPLEMENTED;
+    return CMS_STATUS_OK;
 }
 
-CMS_STATUS cms_database_save(StudentDatabase *db, const char *file_path)
-{
+CMS_STATUS cms_database_save(StudentDatabase *db, const char *file_path) {
     /* TODO: Implement database saving to file */
-    if (db == NULL)
-    {
+    if (db == NULL) {
         return CMS_STATUS_INVALID_ARGUMENT;
     }
 
@@ -107,56 +189,21 @@ CMS_STATUS cms_database_save(StudentDatabase *db, const char *file_path)
     return CMS_STATUS_NOT_IMPLEMENTED;
 }
 
-CMS_STATUS cms_database_insert(StudentDatabase *db, const StudentRecord *record)
-{
+CMS_STATUS cms_database_insert(StudentDatabase *db, const StudentRecord *record) {
     /* TODO: Implement record insertion */
-    if (db == NULL || record == NULL || !db->is_loaded)
-    {
+    if (db == NULL || record == NULL) {
         return CMS_STATUS_INVALID_ARGUMENT;
     }
 
-    /* Check for duplicate ID */
-    for (size_t i = 0; i < db->count; i++)
-    {
-        if (db->records[i].id == record->id)
-        {
-            return CMS_STATUS_DUPLICATE;
-        }
-    }
-
-    /* Resize array if needed */
-    if (db->count >= db->capacity)
-    {
-        size_t new_cap = db->capacity * CMS_GROWTH_FACTOR;
-        StudentRecord *new_mem = (StudentRecord *)realloc(db->records, new_cap * sizeof(StudentRecord));
-        if (new_mem == NULL)
-        {
-            return CMS_STATUS_ERROR;
-        }
-        db->records = new_mem;
-        db->capacity = new_cap;
-    }
-
-    /* Add record to database */
-    StudentRecord *new_record = &db->records[db->count];
-    new_record->id = record->id;
-    strncpy(new_record->name, record->name, sizeof(new_record->name) - 1);
-    new_record->name[sizeof(new_record->name) - 1] = '\0';
-    strncpy(new_record->programme, record->programme, sizeof(new_record->programme) - 1);
-    new_record->programme[sizeof(new_record->programme) - 1] = '\0';
-    new_record->mark = record->mark;
-
-    db->count++;
-    db->is_dirty = true;
-
-    return CMS_STATUS_OK;
+    /* TODO: Check for duplicate ID */
+    /* TODO: Resize array if needed */
+    /* TODO: Add record to database */
+    return CMS_STATUS_NOT_IMPLEMENTED;
 }
 
-CMS_STATUS cms_database_query(const StudentDatabase *db, int student_id, StudentRecord *out_record)
-{
+CMS_STATUS cms_database_query(const StudentDatabase *db, int student_id, StudentRecord *out_record) {
     /* TODO: Implement record query */
-    if (db == NULL || out_record == NULL)
-    {
+    if (db == NULL || out_record == NULL) {
         return CMS_STATUS_INVALID_ARGUMENT;
     }
 
@@ -164,11 +211,9 @@ CMS_STATUS cms_database_query(const StudentDatabase *db, int student_id, Student
     return CMS_STATUS_NOT_FOUND;
 }
 
-CMS_STATUS cms_database_update(StudentDatabase *db, int student_id, const StudentRecord *new_record)
-{
+CMS_STATUS cms_database_update(StudentDatabase *db, int student_id, const StudentRecord *new_record) {
     /* TODO: Implement record update */
-    if (db == NULL || new_record == NULL)
-    {
+    if (db == NULL || new_record == NULL) {
         return CMS_STATUS_INVALID_ARGUMENT;
     }
 
@@ -176,11 +221,9 @@ CMS_STATUS cms_database_update(StudentDatabase *db, int student_id, const Studen
     return CMS_STATUS_NOT_IMPLEMENTED;
 }
 
-CMS_STATUS cms_database_delete(StudentDatabase *db, int student_id)
-{
+CMS_STATUS cms_database_delete(StudentDatabase *db, int student_id) {
     /* TODO: Implement record deletion */
-    if (db == NULL)
-    {
+    if (db == NULL) {
         return CMS_STATUS_INVALID_ARGUMENT;
     }
 
@@ -188,82 +231,19 @@ CMS_STATUS cms_database_delete(StudentDatabase *db, int student_id)
     return CMS_STATUS_NOT_IMPLEMENTED;
 }
 
-CMS_STATUS cms_database_show_all(const StudentDatabase *db)
-{
+CMS_STATUS cms_database_show_all(const StudentDatabase *db) {
     /* TODO: Implement display of all records */
-    if (db == NULL)
-    {
+    if (db == NULL) {
         return CMS_STATUS_INVALID_ARGUMENT;
     }
 
     /* TODO: Print all records in formatted table */
-    if (db->records == NULL || db->count == 0)
-    {
-        printf("No records to display.\n");
-        return CMS_STATUS_INVALID_ARGUMENT;
-    }
-    else
-    {
-        cms_display_table(db);
-        return CMS_STATUS_OK;
-    }
+    return CMS_STATUS_NOT_IMPLEMENTED;
 }
 
-CMS_STATUS cms_database_show_sorted(const StudentDatabase *db, char sort_key[32], char sort_order[32])
-{
-    /* Display sorted records without modifying the original database */
-    if (db == NULL)
-    {
-        return CMS_STATUS_INVALID_ARGUMENT;
-        // return CMS_STATUS_NOT_FOUND;
-    }
-
-    if (db->records == NULL || db->count == 0)
-    {
-        printf("No records to display.\n");
-        return CMS_STATUS_OK;
-    }
-
-    /* Create a copy of the records to sort */
-    StudentRecord *sorted_records = (StudentRecord *)malloc(db->count * sizeof(StudentRecord));
-    if (sorted_records == NULL)
-    {
-        return CMS_STATUS_ERROR;
-    }
-
-    /* Copy records */
-    memcpy(sorted_records, db->records, db->count * sizeof(StudentRecord));
-
-    /* Note: Sorting logic would use cms_sort_by_id() or cms_sort_by_mark() from summary.h
-       For now, we'll just display records in current order */
-
-    /* Display header */
-    printf("\nTable Name: StudentRecords\n");
-    printf("%-12s %-20s %-30s %-10s\n", "ID", "Name", "Programme", "Mark");
-    printf("%-12s %-20s %-30s %-10s\n", "----", "----", "---------", "----");
-
-    /* Display sorted records */
-    for (size_t i = 0; i < db->count; i++)
-    {
-        printf("%-12d %-20s %-30s %-10.1f\n",
-               sorted_records[i].id,
-               sorted_records[i].name,
-               sorted_records[i].programme,
-               sorted_records[i].mark);
-    }
-    printf("\n");
-
-    /* Free the copied records */
-    free(sorted_records);
-
-    return CMS_STATUS_OK;
-}
-
-CMS_STATUS cms_database_show_record(const StudentRecord *record)
-{
+CMS_STATUS cms_database_show_record(const StudentRecord *record) {
     /* TODO: Implement single record display */
-    if (record == NULL)
-    {
+    if (record == NULL) {
         return CMS_STATUS_INVALID_ARGUMENT;
     }
 
