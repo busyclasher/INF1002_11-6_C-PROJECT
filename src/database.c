@@ -5,29 +5,6 @@
 #include "config.h"
 #include "utils.h"
 
-static CMS_STATUS cms_ensure_capacity(StudentDatabase *db) {
-    if (db == NULL) {
-        return CMS_STATUS_INVALID_ARGUMENT;
-    }
-
-    if (db->count < db->capacity) {
-        return CMS_STATUS_OK;
-    }
-
-    size_t new_capacity = (db->capacity == 0)
-        ? CMS_INITIAL_CAPACITY
-        : db->capacity * CMS_GROWTH_FACTOR;
-
-    StudentRecord *new_records = realloc(db->records, new_capacity * sizeof(StudentRecord));
-    if (new_records == NULL) {
-        return CMS_STATUS_ERROR;
-    }
-
-    db->records = new_records;
-    db->capacity = new_capacity;
-    return CMS_STATUS_OK;
-}
-
 CMS_STATUS cms_database_init(StudentDatabase *db) {
     /* Initialize database structure and allocate initial storage.
        After successful initialization the database contains no records
@@ -114,69 +91,8 @@ CMS_STATUS cms_database_load(StudentDatabase *db, const char *file_path) {
         return CMS_STATUS_PARSE_ERROR;
     }
 
-    CMS_STATUS status = CMS_STATUS_OK;
-    while (fgets(line, sizeof(line), fp) != NULL) {
-        cms_trim_string(line);
-        if (line[0] == '\0') {
-            continue;
-        }
-
-        char *id_str = strtok(line, "\t");
-        char *name = strtok(NULL, "\t");
-        char *programme = strtok(NULL, "\t");
-        char *mark_str = strtok(NULL, "\t");
-
-        if (!id_str || !name || !programme || !mark_str) {
-            status = CMS_STATUS_PARSE_ERROR;
-            break;
-        }
-
-        cms_trim_string(id_str);
-        cms_trim_string(name);
-        cms_trim_string(programme);
-        cms_trim_string(mark_str);
-
-        int id = atoi(id_str);
-        if (!cms_validate_student_id(id)) {
-            status = CMS_STATUS_PARSE_ERROR;
-            break;
-        }
-
-        if (!cms_validate_name(name) || !cms_validate_programme(programme)) {
-            status = CMS_STATUS_PARSE_ERROR;
-            break;
-        }
-
-        char *endptr = NULL;
-        float mark = strtof(mark_str, &endptr);
-        if (endptr == mark_str || !cms_validate_mark(mark)) {
-            status = CMS_STATUS_PARSE_ERROR;
-            break;
-        }
-
-        status = cms_ensure_capacity(db);
-        if (status != CMS_STATUS_OK) {
-            break;
-        }
-
-        StudentRecord *record = &db->records[db->count];
-        record->id = id;
-        strncpy(record->name, name, CMS_MAX_NAME_LEN);
-        record->name[CMS_MAX_NAME_LEN] = '\0';
-        strncpy(record->programme, programme, CMS_MAX_PROGRAMME_LEN);
-        record->programme[CMS_MAX_PROGRAMME_LEN] = '\0';
-        record->mark = mark;
-        db->count++;
-    }
-
-    if (status != CMS_STATUS_OK) {
-        cms_database_reset_runtime_state(db);
-        fclose(fp);
-        return status;
-    }
-
     fclose(fp);
-    return CMS_STATUS_OK;
+    return CMS_STATUS_NOT_IMPLEMENTED;
 }
 
 CMS_STATUS cms_database_save(StudentDatabase *db, const char *file_path)
