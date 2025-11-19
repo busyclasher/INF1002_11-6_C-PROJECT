@@ -1,6 +1,8 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include "summary.h"
+#include "database.h"
 
 /* Comparison functions for qsort */
 static int compare_by_id_asc(const void *a, const void *b) {
@@ -61,17 +63,43 @@ CMS_STATUS cms_sort_by_mark(StudentDatabase *db, SortOrder order) {
 }
 
 CMS_STATUS cms_calculate_summary(const StudentDatabase *db, SummaryStats *stats) {
-    /* TODO: Implement summary calculation */
-    if (db == NULL || stats == NULL || db->count == 0) {
+    if (db == NULL || stats == NULL) {
         return CMS_STATUS_INVALID_ARGUMENT;
     }
 
-    /* TODO: Calculate count, average, highest, lowest */
-    return CMS_STATUS_NOT_IMPLEMENTED;
+    if (db->records == NULL || db->count == 0) {
+        return CMS_STATUS_NOT_FOUND;
+    }
+
+    stats->count = db->count;
+    float total = 0.0f;
+
+    stats->highest = db->records[0].mark;
+    stats->lowest = db->records[0].mark;
+    stats->highest_id = db->records[0].id;
+    stats->lowest_id = db->records[0].id;
+
+    for (size_t i = 0; i < db->count; ++i) {
+        const StudentRecord *record = &db->records[i];
+        total += record->mark;
+
+        if (record->mark > stats->highest) {
+            stats->highest = record->mark;
+            stats->highest_id = record->id;
+        }
+
+        if (record->mark < stats->lowest) {
+            stats->lowest = record->mark;
+            stats->lowest_id = record->id;
+        }
+    }
+
+    stats->average = total / (float)stats->count;
+
+    return CMS_STATUS_OK;
 }
 
 CMS_STATUS cms_display_summary(const StudentDatabase *db) {
-    /* TODO: Implement summary display */
     if (db == NULL) {
         return CMS_STATUS_INVALID_ARGUMENT;
     }
@@ -79,15 +107,67 @@ CMS_STATUS cms_display_summary(const StudentDatabase *db) {
     SummaryStats stats;
     CMS_STATUS status = cms_calculate_summary(db, &stats);
     
-    if (status == CMS_STATUS_OK) {
-        /* TODO: Print formatted summary */
-        printf("\nSummary Statistics:\n");
-        printf("  Total Students: %zu\n", stats.count);
-        printf("  Average Mark: %.2f\n", stats.average);
-        printf("  Highest Mark: %.2f (ID: %d)\n", stats.highest, stats.highest_id);
-        printf("  Lowest Mark: %.2f (ID: %d)\n\n", stats.lowest, stats.lowest_id);
+    if (status == CMS_STATUS_NOT_FOUND) {
+        printf("\nNo records available to summarize.\n\n");
+        return CMS_STATUS_OK;
     }
 
-    return status;
+    if (status != CMS_STATUS_OK) {
+        return status;
+    }
+
+    printf("\nSummary Statistics:\n");
+    printf("  Total Students: %zu\n", stats.count);
+    printf("  Average Mark: %.2f\n", stats.average);
+    printf("  Highest Mark: %.2f (ID: %d)\n", stats.highest, stats.highest_id);
+    printf("  Lowest Mark: %.2f (ID: %d)\n\n", stats.lowest, stats.lowest_id);
+
+    return CMS_STATUS_OK;
 }
 
+CMS_STATUS cms_show_summary(const StudentDatabase *db) {
+    return cms_display_summary(db);
+}
+
+CMS_STATUS cms_show_all(const StudentDatabase *db) {
+    return cms_database_show_all(db);
+}
+
+CMS_STATUS cms_show_all_sorted(const StudentDatabase *db, CmsSortKey sort_key, CmsSortOrder sort_order) {
+    if (db == NULL) {
+        return CMS_STATUS_INVALID_ARGUMENT;
+    }
+
+    if (db->records == NULL || db->count == 0) {
+        printf("\nNo records available.\n\n");
+        return CMS_STATUS_OK;
+    }
+
+    StudentRecord *buffer = malloc(db->count * sizeof(StudentRecord));
+    if (buffer == NULL) {
+        return CMS_STATUS_ERROR;
+    }
+
+    memcpy(buffer, db->records, db->count * sizeof(StudentRecord));
+
+    int (*cmp)(const void *, const void *) = NULL;
+    if (sort_key == CMS_SORT_KEY_ID) {
+        cmp = (sort_order == CMS_SORT_DESC) ? compare_by_id_desc : compare_by_id_asc;
+    } else if (sort_key == CMS_SORT_KEY_MARK) {
+        cmp = (sort_order == CMS_SORT_DESC) ? compare_by_mark_desc : compare_by_mark_asc;
+    } else {
+        free(buffer);
+        return CMS_STATUS_INVALID_ARGUMENT;
+    }
+
+    qsort(buffer, db->count, sizeof(StudentRecord), cmp);
+
+    StudentDatabase view = *db;
+    view.records = buffer;
+    view.count = db->count;
+    view.capacity = db->count;
+
+    CMS_STATUS status = cms_database_show_all(&view);
+    free(buffer);
+    return status;
+}

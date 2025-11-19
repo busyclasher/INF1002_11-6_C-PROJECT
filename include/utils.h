@@ -2,6 +2,7 @@
 #define CMS_UTILS_H
 
 #include <stdbool.h>
+#include <stddef.h>
 
 /* Input validation */
 bool cms_validate_student_id(int id);
@@ -11,6 +12,8 @@ bool cms_validate_mark(float mark);
 
 /* String utilities */
 void cms_trim_string(char *str);
+void cms_trim(char *str);
+bool cms_string_equals_ignore_case(const char *a, const char *b);
 void cms_string_to_upper(char *str);
 
 /* Input reading */

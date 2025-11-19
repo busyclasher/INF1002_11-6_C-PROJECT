@@ -42,12 +42,45 @@ bool cms_validate_mark(float mark) {
 }
 
 void cms_trim_string(char *str) {
-    /* TODO: Implement string trimming */
     if (str == NULL) {
         return;
     }
 
-    /* TODO: Remove leading and trailing whitespace */
+    char *start = str;
+    while (*start && isspace((unsigned char)*start)) {
+        start++;
+    }
+
+    char *end = start + strlen(start);
+    while (end > start && isspace((unsigned char)*(end - 1))) {
+        end--;
+    }
+
+    *end = '\0';
+
+    if (start != str) {
+        memmove(str, start, (size_t)(end - start + 1));
+    }
+}
+
+void cms_trim(char *str) {
+    cms_trim_string(str);
+}
+
+bool cms_string_equals_ignore_case(const char *a, const char *b) {
+    if (a == NULL || b == NULL) {
+        return false;
+    }
+
+    while (*a && *b) {
+        if (tolower((unsigned char)*a) != tolower((unsigned char)*b)) {
+            return false;
+        }
+        a++;
+        b++;
+    }
+
+    return *a == *b;
 }
 
 void cms_string_to_upper(char *str) {

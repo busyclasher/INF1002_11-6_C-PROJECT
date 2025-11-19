@@ -28,6 +28,23 @@ static CMS_STATUS cms_ensure_capacity(StudentDatabase *db) {
     return CMS_STATUS_OK;
 }
 
+static bool cms_database_find_index(const StudentDatabase *db, int student_id, size_t *out_index) {
+    if (db == NULL || db->records == NULL || db->count == 0) {
+        return false;
+    }
+
+    for (size_t i = 0; i < db->count; ++i) {
+        if (db->records[i].id == student_id) {
+            if (out_index != NULL) {
+                *out_index = i;
+            }
+            return true;
+        }
+    }
+
+    return false;
+}
+
 CMS_STATUS cms_database_init(StudentDatabase *db) {
     /* Initialize database structure and allocate initial storage.
        After successful initialization the database contains no records
@@ -268,13 +285,25 @@ CMS_STATUS cms_database_insert(StudentDatabase *db, const StudentRecord *record)
 }
 
 CMS_STATUS cms_database_query(const StudentDatabase *db, int student_id, StudentRecord *out_record) {
-    /* TODO: Implement record query */
     if (db == NULL || out_record == NULL) {
         return CMS_STATUS_INVALID_ARGUMENT;
     }
 
-    /* TODO: Search for record by ID */
-    return CMS_STATUS_NOT_FOUND;
+    if (!cms_validate_student_id(student_id)) {
+        return CMS_STATUS_INVALID_ARGUMENT;
+    }
+
+    if (db->records == NULL || db->count == 0) {
+        return CMS_STATUS_NOT_FOUND;
+    }
+
+    size_t index = 0;
+    if (!cms_database_find_index(db, student_id, &index)) {
+        return CMS_STATUS_NOT_FOUND;
+    }
+
+    *out_record = db->records[index];
+    return CMS_STATUS_OK;
 }
 
 CMS_STATUS cms_database_update(StudentDatabase *db, int student_id, const StudentRecord *new_record) {
@@ -346,13 +375,28 @@ CMS_STATUS cms_database_delete(StudentDatabase *db, int student_id) {
 }
 
 CMS_STATUS cms_database_show_all(const StudentDatabase *db) {
-    /* TODO: Implement display of all records */
     if (db == NULL) {
         return CMS_STATUS_INVALID_ARGUMENT;
     }
 
-    /* TODO: Print all records in formatted table */
-    return CMS_STATUS_NOT_IMPLEMENTED;
+    if (db->records == NULL || db->count == 0) {
+        printf("\nNo records available.\n\n");
+        return CMS_STATUS_OK;
+    }
+
+    printf("\n%-8s  %-32s  %-20s  %-6s\n", "ID", "Name", "Programme", "Mark");
+    printf("-------------------------------------------------------------------------------\n");
+    for (size_t i = 0; i < db->count; ++i) {
+        const StudentRecord *record = &db->records[i];
+        printf("%-8d  %-32s  %-20s  %6.2f\n",
+               record->id,
+               record->name,
+               record->programme,
+               record->mark);
+    }
+    printf("-------------------------------------------------------------------------------\n\n");
+
+    return CMS_STATUS_OK;
 }
 
 CMS_STATUS cms_database_show_record(const StudentRecord *record) {

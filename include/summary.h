@@ -36,6 +36,9 @@ typedef struct {
 
 CMS_STATUS cms_calculate_summary(const StudentDatabase *db, SummaryStats *stats);
 CMS_STATUS cms_display_summary(const StudentDatabase *db);
+CMS_STATUS cms_show_summary(const StudentDatabase *db);
+CMS_STATUS cms_show_all(const StudentDatabase *db);
+CMS_STATUS cms_show_all_sorted(const StudentDatabase *db, CmsSortKey sort_key, CmsSortOrder sort_order);
 
 #endif /* CMS_SUMMARY_H */
 

@@ -1,11 +1,50 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <ctype.h>
+#include <limits.h>
+#include <errno.h>
 #include "commands.h"
 #include "database.h"
 #include "summary.h"
 #include "utils.h"
 #include "config.h"
+
+static bool cms_parse_int_argument(const char *text, int *out_value) {
+    if (text == NULL || out_value == NULL) {
+        return false;
+    }
+
+    while (*text && isspace((unsigned char)*text)) {
+        text++;
+    }
+
+    if (*text == '\0') {
+        return false;
+    }
+
+    errno = 0;
+    char *end_ptr = NULL;
+    long value = strtol(text, &end_ptr, 10);
+    if (errno != 0) {
+        return false;
+    }
+
+    while (end_ptr && *end_ptr && isspace((unsigned char)*end_ptr)) {
+        end_ptr++;
+    }
+
+    if (end_ptr != NULL && *end_ptr != '\0') {
+        return false;
+    }
+
+    if (value < INT_MIN || value > INT_MAX) {
+        return false;
+    }
+
+    *out_value = (int)value;
+    return true;
+}
 
 /**
  * Opens a student database file.
@@ -104,7 +143,6 @@ CMS_STATUS cmd_insert(StudentDatabase *db) {
     }
 
     StudentRecord new_record;
-    char buffer[CMS_MAX_PROGRAMME_LEN + 1];
 
     /* Read student ID */
     if (!cms_read_int("Enter student ID: ", &new_record.id)) {
@@ -320,37 +358,166 @@ CMS_STATUS cmd_help(void) {
 }
 
 void cms_command_loop(StudentDatabase *db) {
-    /* TODO: Implement main command loop */
     char input[CMS_MAX_COMMAND_LEN];
 
     while (1) {
         printf("CMS> ");
-        
+
         if (!cms_read_line(input, CMS_MAX_COMMAND_LEN)) {
+            printf("\n");
             break;
         }
 
-        /* TODO: Parse and execute command */
+        cms_trim(input);
+        if (input[0] == '\0') {
+            continue;
+        }
+
+        if (cms_string_equals_ignore_case(input, "EXIT") ||
+            cms_string_equals_ignore_case(input, "QUIT")) {
+            printf("Exiting CMS.\n");
+            break;
+        }
+
         CMS_STATUS status = cms_parse_command(input, db);
-        
-        if (status == CMS_STATUS_OK) {
-            /* Command executed successfully */
-        } else if (status == CMS_STATUS_NOT_IMPLEMENTED) {
-            printf("Command not yet implemented\n");
+        if (status != CMS_STATUS_OK) {
+            cms_print_status(status);
         }
     }
 }
 
 CMS_STATUS cms_parse_command(const char *input, StudentDatabase *db) {
-    /* TODO: Implement command parsing */
     if (input == NULL || db == NULL) {
         return CMS_STATUS_INVALID_ARGUMENT;
     }
 
-    /* TODO: Tokenize input */
-    /* TODO: Match command keywords */
-    /* TODO: Call appropriate handler */
+    char buffer[CMS_MAX_COMMAND_LEN];
+    strncpy(buffer, input, sizeof(buffer) - 1);
+    buffer[sizeof(buffer) - 1] = '\0';
+    cms_trim(buffer);
 
-    return CMS_STATUS_NOT_IMPLEMENTED;
+    if (buffer[0] == '\0') {
+        return CMS_STATUS_OK;
+    }
+
+    char *args = NULL;
+    char *command = buffer;
+    char *split = buffer;
+    while (*split && !isspace((unsigned char)*split)) {
+        split++;
+    }
+    if (*split != '\0') {
+        *split = '\0';
+        args = split + 1;
+        while (*args && isspace((unsigned char)*args)) {
+            args++;
+        }
+        if (args[0] == '\0') {
+            args = NULL;
+        }
+    }
+
+    cms_string_to_upper(command);
+
+    if (strcmp(command, "HELP") == 0) {
+        if (args != NULL) {
+            printf("HELP does not take any arguments. Ignoring extra input.\n");
+        }
+        return cmd_help();
+    }
+
+    if (strcmp(command, "OPEN") == 0) {
+        const char *path = args;
+        return cmd_open(db, path);
+    }
+
+    if (strcmp(command, "SHOW") == 0) {
+        if (args == NULL) {
+            printf("Usage: SHOW [ALL|SUMMARY|ID|MARK] [ASC|DESC]\n");
+            return CMS_STATUS_OK;
+        }
+
+        char *option = args;
+        char *order = NULL;
+        char *cursor = option;
+        while (*cursor && !isspace((unsigned char)*cursor)) {
+            cursor++;
+        }
+        if (*cursor != '\0') {
+            *cursor = '\0';
+            cursor++;
+            while (*cursor && isspace((unsigned char)*cursor)) {
+                cursor++;
+            }
+            if (*cursor != '\0') {
+                order = cursor;
+                char *order_end = order;
+                while (*order_end && !isspace((unsigned char)*order_end)) {
+                    order_end++;
+                }
+                if (*order_end != '\0') {
+                    *order_end = '\0';
+                    order_end++;
+                    while (*order_end && isspace((unsigned char)*order_end)) {
+                        order_end++;
+                    }
+                    if (*order_end != '\0') {
+                        printf("Usage: SHOW [ALL|SUMMARY|ID|MARK] [ASC|DESC]\n");
+                        return CMS_STATUS_OK;
+                    }
+                }
+            }
+        }
+
+        return cmd_show(db, option, order);
+    }
+
+    if (strcmp(command, "INSERT") == 0) {
+        if (args != NULL) {
+            printf("Usage: INSERT\n");
+            return CMS_STATUS_OK;
+        }
+        return cmd_insert(db);
+    }
+
+    if (strcmp(command, "QUERY") == 0) {
+        int student_id = 0;
+        if (!cms_parse_int_argument(args, &student_id)) {
+            printf("Usage: QUERY <student_id>\n");
+            return CMS_STATUS_OK;
+        }
+        return cmd_query(db, student_id);
+    }
+
+    if (strcmp(command, "UPDATE") == 0) {
+        int student_id = 0;
+        if (!cms_parse_int_argument(args, &student_id)) {
+            printf("Usage: UPDATE <student_id>\n");
+            return CMS_STATUS_OK;
+        }
+        return cmd_update(db, student_id);
+    }
+
+    if (strcmp(command, "DELETE") == 0) {
+        int student_id = 0;
+        if (!cms_parse_int_argument(args, &student_id)) {
+            printf("Usage: DELETE <student_id>\n");
+            return CMS_STATUS_OK;
+        }
+        return cmd_delete(db, student_id);
+    }
+
+    if (strcmp(command, "SAVE") == 0) {
+        const char *save_path = args;
+        return cmd_save(db, save_path);
+    }
+
+    if (strcmp(command, "EXIT") == 0 || strcmp(command, "QUIT") == 0) {
+        printf("Type EXIT or QUIT directly at the prompt to leave the program.\n");
+        return CMS_STATUS_OK;
+    }
+
+    printf("Unknown command. Type HELP to see the list of commands.\n");
+    return CMS_STATUS_OK;
 }
 
