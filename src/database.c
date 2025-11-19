@@ -175,30 +175,96 @@ CMS_STATUS cms_database_load(StudentDatabase *db, const char *file_path) {
         return status;
     }
 
+    strncpy(db->file_path, file_path, CMS_MAX_FILE_PATH_LEN - 1);
+    db->file_path[CMS_MAX_FILE_PATH_LEN - 1] = '\0';
+    db->is_loaded = true;
+    db->is_dirty = false;
+
     fclose(fp);
     return CMS_STATUS_OK;
 }
 
 CMS_STATUS cms_database_save(StudentDatabase *db, const char *file_path) {
-    /* TODO: Implement database saving to file */
-    if (db == NULL) {
+    if (db == NULL || file_path == NULL) {
         return CMS_STATUS_INVALID_ARGUMENT;
     }
 
-    /* TODO: Write records to file in proper format */
-    return CMS_STATUS_NOT_IMPLEMENTED;
+    if (file_path[0] == '\0') {
+        return CMS_STATUS_INVALID_ARGUMENT;
+    }
+
+    FILE *fp = fopen(file_path, "w");
+    if (fp == NULL) {
+        return CMS_STATUS_IO;
+    }
+
+    CMS_STATUS status = CMS_STATUS_OK;
+
+    if (fprintf(fp, "Table Name: StudentRecords\n") < 0 ||
+        fprintf(fp, "ID\tName\tProgramme\tMark\n") < 0) {
+        status = CMS_STATUS_IO;
+    } else {
+        for (size_t i = 0; i < db->count; i++) {
+            const StudentRecord *rec = &db->records[i];
+            if (fprintf(fp, "%d\t%s\t%s\t%.2f\n",
+                        rec->id, rec->name, rec->programme, rec->mark) < 0) {
+                status = CMS_STATUS_IO;
+                break;
+            }
+        }
+    }
+
+    if (fclose(fp) != 0) {
+        status = CMS_STATUS_IO;
+    }
+
+    if (status != CMS_STATUS_OK) {
+        return status;
+    }
+
+    strncpy(db->file_path, file_path, CMS_MAX_FILE_PATH_LEN - 1);
+    db->file_path[CMS_MAX_FILE_PATH_LEN - 1] = '\0';
+    db->is_dirty = false;
+    db->is_loaded = true;
+
+    return CMS_STATUS_OK;
 }
 
 CMS_STATUS cms_database_insert(StudentDatabase *db, const StudentRecord *record) {
-    /* TODO: Implement record insertion */
     if (db == NULL || record == NULL) {
         return CMS_STATUS_INVALID_ARGUMENT;
     }
 
-    /* TODO: Check for duplicate ID */
-    /* TODO: Resize array if needed */
-    /* TODO: Add record to database */
-    return CMS_STATUS_NOT_IMPLEMENTED;
+    if (!cms_validate_student_id(record->id) ||
+        !cms_validate_name(record->name) ||
+        !cms_validate_programme(record->programme) ||
+        !cms_validate_mark(record->mark)) {
+        return CMS_STATUS_INVALID_ARGUMENT;
+    }
+
+    size_t existing_index = 0;
+    if (cms_database_find_index(db, record->id, &existing_index)) {
+        return CMS_STATUS_DUPLICATE;
+    }
+
+    CMS_STATUS status = cms_ensure_capacity(db);
+    if (status != CMS_STATUS_OK) {
+        return status;
+    }
+
+    StudentRecord *dest = &db->records[db->count];
+    dest->id = record->id;
+    strncpy(dest->name, record->name, CMS_MAX_NAME_LEN);
+    dest->name[CMS_MAX_NAME_LEN] = '\0';
+    strncpy(dest->programme, record->programme, CMS_MAX_PROGRAMME_LEN);
+    dest->programme[CMS_MAX_PROGRAMME_LEN] = '\0';
+    dest->mark = record->mark;
+    db->count++;
+
+    db->is_dirty = true;
+    db->is_loaded = true;
+
+    return CMS_STATUS_OK;
 }
 
 CMS_STATUS cms_database_query(const StudentDatabase *db, int student_id, StudentRecord *out_record) {
@@ -250,13 +316,33 @@ CMS_STATUS cms_database_update(StudentDatabase *db, int student_id, const Studen
 }
 
 CMS_STATUS cms_database_delete(StudentDatabase *db, int student_id) {
-    /* TODO: Implement record deletion */
     if (db == NULL) {
         return CMS_STATUS_INVALID_ARGUMENT;
     }
 
-    /* TODO: Find and remove record */
-    return CMS_STATUS_NOT_IMPLEMENTED;
+    if (!cms_validate_student_id(student_id)) {
+        return CMS_STATUS_INVALID_ARGUMENT;
+    }
+
+    if (db->records == NULL || db->count == 0) {
+        return CMS_STATUS_NOT_FOUND;
+    }
+
+    size_t index = 0;
+    if (!cms_database_find_index(db, student_id, &index)) {
+        return CMS_STATUS_NOT_FOUND;
+    }
+
+    if (index < db->count - 1) {
+        memmove(&db->records[index],
+                &db->records[index + 1],
+                (db->count - index - 1) * sizeof(StudentRecord));
+    }
+
+    db->count--;
+    db->is_dirty = true;
+
+    return CMS_STATUS_OK;
 }
 
 CMS_STATUS cms_database_show_all(const StudentDatabase *db) {
