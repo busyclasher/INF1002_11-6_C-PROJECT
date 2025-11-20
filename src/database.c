@@ -199,16 +199,25 @@ CMS_STATUS cms_database_load(StudentDatabase *db, const char *file_path) {
     }
 
     fclose(fp);
+
+/* Mak daabase as sccessfully loaded and recod file path*/   /* Mark database as successfully loaded and record file path */
+    db->is_loaded = true;
+    db->is_dirty = false;
+    strncpy(db->file_path, file_path, CMS_MAX_FILE_PATH_LEN - 1);
+    db->file_path[CMS_MAX_FILE_PATH_LEN - 1] = '\0';
+
     return CMS_STATUS_OK;
 }
 
 CMS_STATUS cms_database_save(StudentDatabase *db, const char *file_path) {
     /* TODO: Implement database saving to file */
+    file_path=file_path;
     if (db == NULL) {
         return CMS_STATUS_INVALID_ARGUMENT;
     }
 
     /* TODO: Write records to file in proper format */
+    
     return CMS_STATUS_NOT_IMPLEMENTED;
 }
 
@@ -276,6 +285,7 @@ CMS_STATUS cms_database_query(const StudentDatabase *db, int student_id, Student
 
 CMS_STATUS cms_database_update(StudentDatabase *db, int student_id, const StudentRecord *new_record) {
     /* TODO: Implement record update */
+    student_id=student_id;
     if (db == NULL || new_record == NULL) {
         return CMS_STATUS_INVALID_ARGUMENT;
     }
@@ -285,13 +295,29 @@ CMS_STATUS cms_database_update(StudentDatabase *db, int student_id, const Studen
 }
 
 CMS_STATUS cms_database_delete(StudentDatabase *db, int student_id) {
-    /* TODO: Implement record deletion */
+    /* Remove a record with the given student_id from the database */
     if (db == NULL) {
         return CMS_STATUS_INVALID_ARGUMENT;
     }
 
-    /* TODO: Find and remove record */
-    return CMS_STATUS_NOT_IMPLEMENTED;
+    if (db->records == NULL || db->count == 0) {
+        return CMS_STATUS_NOT_FOUND;
+    }
+
+    size_t index = 0;
+    if (!cms_database_find_index(db, student_id, &index)) {
+        return CMS_STATUS_NOT_FOUND;
+    }
+
+    /* Shift records after the deleted one to fill the gap */
+    for (size_t i = index + 1; i < db->count; ++i) {
+        db->records[i - 1] = db->records[i];
+    }
+
+    db->count--;
+    db->is_dirty = true;
+
+    return CMS_STATUS_OK;
 }
 
 CMS_STATUS cms_database_show_all(const StudentDatabase *db) {
@@ -328,6 +354,8 @@ CMS_STATUS cms_database_show_record(const StudentRecord *record) {
     
 CMS_STATUS cms_database_show_sorted(const StudentDatabase *db, CmsSortKey sort_key, CmsSortOrder sort_order) {
     /* Display sorted records without modifying the original database */
+    sort_key=sort_key;
+    sort_order=sort_order;
     if (db == NULL)
     {
         return CMS_STATUS_INVALID_ARGUMENT;

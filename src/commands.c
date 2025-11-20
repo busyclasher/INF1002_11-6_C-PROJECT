@@ -439,12 +439,64 @@ CMS_STATUS cmd_update(StudentDatabase *db, int student_id) {
 }
 
 CMS_STATUS cmd_delete(StudentDatabase *db, int student_id) {
-    /* TODO: Implement DELETE command */
     if (db == NULL) {
         return CMS_STATUS_INVALID_ARGUMENT;
     }
 
-    return cms_database_delete(db, student_id);
+    /* Ensure a database is loaded */
+    if (!db->is_loaded) {
+        printf("CMS> No database is currently opened.\n");
+        return CMS_STATUS_INVALID_ARGUMENT;
+    }
+
+    /* Validate student ID */
+    if (!cms_validate_student_id(student_id)) {
+        printf("CMS: Invalid student ID.\n");
+        return CMS_STATUS_INVALID_ARGUMENT;
+    }
+
+    /* Check if record exists first */
+    StudentRecord tmp_record;
+    CMS_STATUS status = cms_database_query(db, student_id, &tmp_record);
+
+    if (status == CMS_STATUS_NOT_FOUND) {
+        printf("CMS: The record with ID=%d does not exist.\n", student_id);
+        return status;
+    } else if (status != CMS_STATUS_OK) {
+        cms_print_status(status);
+        return status;
+    }
+
+    /* Confirmation loop */
+    char input_buffer[32];
+    while (1) {
+        printf("CMS: Are you sure you want to delete record with ID=%d? Type \"Y\" to confirm or type \"N\" to cancel.\n",
+               student_id);
+
+        if (!cms_read_line(input_buffer, sizeof(input_buffer))) {
+            /* Treat read failure as cancellation */
+            printf("CMS: The deletion is cancelled.\n");
+            return CMS_STATUS_ERROR;
+        }
+
+        cms_trim_string(input_buffer);
+        cms_string_to_upper(input_buffer);
+
+        if (strcmp(input_buffer, "Y") == 0) {
+            status = cms_database_delete(db, student_id);
+            if (status == CMS_STATUS_OK) {
+                printf("CMS: The record with ID=%d is successfully deleted.\n", student_id);
+            } else {
+                cms_print_status(status);
+            }
+            return status;
+        } else if (strcmp(input_buffer, "N") == 0) {
+            printf("CMS: The deletion is cancelled.\n");
+            return CMS_STATUS_OK;
+        } else {
+            printf("CMS: Invalid input. Please type \"Y\" to confirm or \"N\" to cancel.\n");
+        }
+    }
 }
 
 CMS_STATUS cmd_save(StudentDatabase *db, const char *filename) {
@@ -512,11 +564,16 @@ CMS_STATUS cms_parse_command(const char *input, StudentDatabase *db) {
     {
         char assumedFileLocation[255] = "./";
         strcat(assumedFileLocation, input + 5);
-        // Skip space if present
-        if (assumedFileLocation[0] == ' ')
-            memmove(assumedFileLocation, assumedFileLocation + 1, strlen(assumedFileLocation));
-        cms_database_load(db, assumedFileLocation);
-        return CMS_STATUS_OK;
+        
+        // If there's a space after "OPEN", trim it properly
+        if (assumedFileLocation[2] == ' ')
+            memmove(assumedFileLocation + 2, assumedFileLocation + 3, strlen(assumedFileLocation + 3) + 1);
+
+        CMS_STATUS status = cms_database_load(db, assumedFileLocation);
+        if (status != CMS_STATUS_OK) {
+            cms_print_status(status);
+        }
+        return status;
     }
     else if (strncmp(input, "SHOW", 4) == 0)
     {
@@ -528,6 +585,26 @@ CMS_STATUS cms_parse_command(const char *input, StudentDatabase *db) {
         if (*params == ' ')
             params++; // skip space
         return cmd_insert(db, params);
+    }
+    else if (strncmp(input, "DELETE", 6) == 0)
+    {
+        const char *params = input + 6;
+        while (*params == ' ')
+        {
+            params++;
+        }
+
+        int id = 0;
+        if (strncmp(params, "ID=", 3) == 0)
+        {
+            id = atoi(params + 3);
+        }
+        else
+        {
+            id = atoi(params);
+        }
+
+        return cmd_delete(db, id);
     }
     else if (strncmp(input, "HELP", 4) == 0)
     {
