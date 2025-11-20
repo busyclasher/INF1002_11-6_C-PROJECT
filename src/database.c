@@ -210,15 +210,43 @@ CMS_STATUS cms_database_load(StudentDatabase *db, const char *file_path) {
 }
 
 CMS_STATUS cms_database_save(StudentDatabase *db, const char *file_path) {
-    /* TODO: Implement database saving to file */
-    file_path=file_path;
-    if (db == NULL) {
+    if (db == NULL || file_path == NULL) {
         return CMS_STATUS_INVALID_ARGUMENT;
     }
 
-    /* TODO: Write records to file in proper format */
-    
-    return CMS_STATUS_NOT_IMPLEMENTED;
+    FILE *fp = fopen(file_path, "w");
+    if (fp == NULL) {
+        return CMS_STATUS_IO;
+    }
+
+    /* Write table name */
+    if (fprintf(fp, "Table Name: StudentRecords\n") < 0) {
+        fclose(fp);
+        return CMS_STATUS_IO;
+    }
+
+    /* Write column header */
+    if (fprintf(fp, "ID\tName\tProgramme\tMark\n") < 0) {
+        fclose(fp);
+        return CMS_STATUS_IO;
+    }
+
+    /* Write each record */
+    for (size_t i = 0; i < db->count; i++) {
+        StudentRecord *record = &db->records[i];
+        if (fprintf(fp, "%d\t%s\t%s\t%.1f\n",
+                   record->id, record->name, record->programme, record->mark) < 0) {
+            fclose(fp);
+            return CMS_STATUS_IO;
+        }
+    }
+
+    fclose(fp);
+
+    /* Mark database as saved (not dirty) */
+    db->is_dirty = false;
+
+    return CMS_STATUS_OK;
 }
 
 CMS_STATUS cms_database_insert(StudentDatabase *db, const StudentRecord *record) {
@@ -284,14 +312,28 @@ CMS_STATUS cms_database_query(const StudentDatabase *db, int student_id, Student
 }
 
 CMS_STATUS cms_database_update(StudentDatabase *db, int student_id, const StudentRecord *new_record) {
-    /* TODO: Implement record update */
-    student_id=student_id;
     if (db == NULL || new_record == NULL) {
         return CMS_STATUS_INVALID_ARGUMENT;
     }
 
-    /* TODO: Find record and update fields */
-    return CMS_STATUS_NOT_IMPLEMENTED;
+    size_t index;
+    if (!cms_database_find_index(db, student_id, &index)) {
+        return CMS_STATUS_NOT_FOUND;
+    }
+
+    /* Update the record */
+    StudentRecord *record = &db->records[index];
+    record->id = new_record->id;  /* Keep same ID, but copy the rest */
+    strncpy(record->name, new_record->name, CMS_MAX_NAME_LEN);
+    record->name[CMS_MAX_NAME_LEN] = '\0';
+    strncpy(record->programme, new_record->programme, CMS_MAX_PROGRAMME_LEN);
+    record->programme[CMS_MAX_PROGRAMME_LEN] = '\0';
+    record->mark = new_record->mark;
+
+    /* Mark database as dirty */
+    db->is_dirty = true;
+
+    return CMS_STATUS_OK;
 }
 
 CMS_STATUS cms_database_delete(StudentDatabase *db, int student_id) {

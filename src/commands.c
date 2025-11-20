@@ -500,13 +500,30 @@ CMS_STATUS cmd_delete(StudentDatabase *db, int student_id) {
 }
 
 CMS_STATUS cmd_save(StudentDatabase *db, const char *filename) {
-    /* TODO: Implement SAVE command */
     if (db == NULL) {
         return CMS_STATUS_INVALID_ARGUMENT;
     }
 
-    const char *save_path = (filename != NULL) ? filename : db->file_path;
-    return cms_database_save(db, save_path);
+    if (!db->is_loaded) {
+        printf("CMS: No database is currently opened.\n");
+        return CMS_STATUS_INVALID_ARGUMENT;
+    }
+
+    const char *save_path = (filename != NULL && filename[0] != '\0') ? filename : db->file_path;
+    CMS_STATUS status = cms_database_save(db, save_path);
+    if (status == CMS_STATUS_OK) {
+        // Extract basename for cleaner display
+        const char *display_name = save_path;
+        char *slash = strrchr(save_path, '\\');
+        if (slash == NULL) {
+            slash = strrchr(save_path, '/');
+        }
+        if (slash != NULL) {
+            display_name = slash + 1;  // Use basename after last path separator
+        }
+        printf("CMS: The database file \"%s\" is successfully saved.\n", display_name);
+    }
+    return status;
 }
 
 CMS_STATUS cmd_help(void) {
@@ -605,6 +622,10 @@ CMS_STATUS cms_parse_command(const char *input, StudentDatabase *db) {
         }
 
         return cmd_delete(db, id);
+    }
+    else if (strncmp(input, "SAVE", 4) == 0)
+    {
+        return cmd_save(db, NULL);
     }
     else if (strncmp(input, "HELP", 4) == 0)
     {
