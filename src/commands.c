@@ -13,13 +13,16 @@
  * @param filename Path to the database file (uses CMS_DEFAULT_DATABASE_FILE if NULL or empty).
  * @return CMS_STATUS_OK on success, CMS_STATUS_INVALID_ARGUMENT or error code otherwise.
  */
-CMS_STATUS cmd_open(StudentDatabase *db, const char *filename) {
-    if (db == NULL) {
+CMS_STATUS cmd_open(StudentDatabase *db, const char *filename)
+{
+    if (db == NULL)
+    {
         return CMS_STATUS_INVALID_ARGUMENT;
     }
 
     char path_buffer[CMS_MAX_FILE_PATH_LEN];
-    if (filename == NULL || filename[0] == '\0') {
+    if (filename == NULL || filename[0] == '\0')
+    {
         filename = CMS_DEFAULT_DATABASE_FILE;
     }
 
@@ -27,7 +30,8 @@ CMS_STATUS cmd_open(StudentDatabase *db, const char *filename) {
     path_buffer[sizeof(path_buffer) - 1] = '\0';
     cms_trim_string(path_buffer);
 
-    if (path_buffer[0] == '\0') {
+    if (path_buffer[0] == '\0')
+    {
         return CMS_STATUS_INVALID_ARGUMENT;
     }
 
@@ -41,11 +45,14 @@ CMS_STATUS cmd_open(StudentDatabase *db, const char *filename) {
  * @param order Sort order for "ID" or "MARK": "ASC" or "DESC".
  * @return CMS_STATUS_OK on success, CMS_STATUS_INVALID_ARGUMENT or error code otherwise.
  */
-CMS_STATUS cmd_show(const StudentDatabase *db, const char *option, const char *order) {
-    if (db == NULL) {
+CMS_STATUS cmd_show(const StudentDatabase *db, const char *option, const char *order)
+{
+    if (db == NULL)
+    {
         return CMS_STATUS_INVALID_ARGUMENT;
     }
-    if (option == NULL) {
+    if (option == NULL)
+    {
         return CMS_STATUS_INVALID_ARGUMENT;
     }
 
@@ -56,40 +63,56 @@ CMS_STATUS cmd_show(const StudentDatabase *db, const char *option, const char *o
     opt_buf[sizeof(opt_buf) - 1] = '\0';
     cms_trim_string(opt_buf);
 
-    if (order) {
+    if (order)
+    {
         strncpy(ord_buf, order, sizeof(ord_buf) - 1);
         ord_buf[sizeof(ord_buf) - 1] = '\0';
         cms_trim_string(ord_buf);
-    } else {
+    }
+    else
+    {
         ord_buf[0] = '\0';
     }
 
     cms_string_to_upper(opt_buf);
 
-    if (strcmp(opt_buf, "SUMMARY") == 0) {
+    if (strcmp(opt_buf, "SUMMARY") == 0)
+    {
         return cms_display_summary(db);
     }
 
-    if (strcmp(opt_buf, "ALL") == 0) {
+    if (strcmp(opt_buf, "ALL") == 0)
+    {
         return cms_database_show_all(db);
     }
 
     CmsSortKey sort_key;
-    if (strcmp(opt_buf, "ID") == 0) {
+    if (strcmp(opt_buf, "ID") == 0)
+    {
         sort_key = CMS_SORT_KEY_ID;
-    } else if (strcmp(opt_buf, "Mark") == 0) {
+    }
+    else if (strcmp(opt_buf, "Mark") == 0)
+    {
         sort_key = CMS_SORT_KEY_MARK;
-    } else {
+    }
+    else
+    {
         return CMS_STATUS_INVALID_ARGUMENT;
     }
 
     CmsSortOrder sort_order = CMS_SORT_ASC;
-    if (ord_buf[0] != '\0') {
-        if (strcmp(ord_buf, "ASC") == 0) {
+    if (ord_buf[0] != '\0')
+    {
+        if (strcmp(ord_buf, "ASC") == 0)
+        {
             sort_order = CMS_SORT_ASC;
-        } else if (strcmp(ord_buf, "DESC") == 0) {
+        }
+        else if (strcmp(ord_buf, "DESC") == 0)
+        {
             sort_order = CMS_SORT_DESC;
-        } else {
+        }
+        else
+        {
             return CMS_STATUS_INVALID_ARGUMENT;
         }
     }
@@ -115,7 +138,8 @@ CMS_STATUS cmd_show(const StudentDatabase *db, const char *option, const char *o
     // return cms_database_show_sorted(db, key_str, order_str);
 }
 
-CMS_STATUS cmd_insert(StudentDatabase *db, const char *params) {
+CMS_STATUS cmd_insert(StudentDatabase *db, const char *params)
+{
     if (db == NULL)
     {
         return CMS_STATUS_INVALID_ARGUMENT;
@@ -332,12 +356,15 @@ CMS_STATUS cmd_query(const StudentDatabase *db, int student_id)
     return status;
 }
 
-CMS_STATUS cmd_update(StudentDatabase *db, int student_id) {
-    if (db == NULL) {
+CMS_STATUS cmd_update(StudentDatabase *db, int student_id)
+{
+    if (db == NULL)
+    {
         return CMS_STATUS_INVALID_ARGUMENT;
     }
 
-    if (!cms_validate_student_id(student_id)) {
+    if (!cms_validate_student_id(student_id))
+    {
         printf("Invalid student ID.\n");
         return CMS_STATUS_INVALID_ARGUMENT;
     }
@@ -345,10 +372,13 @@ CMS_STATUS cmd_update(StudentDatabase *db, int student_id) {
     StudentRecord current_record;
     CMS_STATUS status = cms_database_query(db, student_id, &current_record);
 
-    if (status == CMS_STATUS_NOT_FOUND) {
+    if (status == CMS_STATUS_NOT_FOUND)
+    {
         printf("No record found for ID %d.\n", student_id);
         return status;
-    } else if (status != CMS_STATUS_OK) {
+    }
+    else if (status != CMS_STATUS_OK)
+    {
         cms_print_status(status);
         return status;
     }
@@ -361,17 +391,21 @@ CMS_STATUS cmd_update(StudentDatabase *db, int student_id) {
     char input_buffer[CMS_MAX_PROGRAMME_LEN + 1];
 
     /* Update name */
-    while (1) {
+    while (1)
+    {
         if (!cms_read_string("Enter name (or press Enter to keep current): ",
-                             input_buffer, sizeof(input_buffer))) {
+                             input_buffer, sizeof(input_buffer)))
+        {
             return CMS_STATUS_ERROR;
         }
 
-        if (input_buffer[0] == '\0') {
+        if (input_buffer[0] == '\0')
+        {
             break;
         }
 
-        if (!cms_validate_name(input_buffer)) {
+        if (!cms_validate_name(input_buffer))
+        {
             printf("Invalid name. Please try again.\n");
             continue;
         }
@@ -382,17 +416,21 @@ CMS_STATUS cmd_update(StudentDatabase *db, int student_id) {
     }
 
     /* Update programme */
-    while (1) {
+    while (1)
+    {
         if (!cms_read_string("Enter programme (or press Enter to keep current): ",
-                             input_buffer, sizeof(input_buffer))) {
+                             input_buffer, sizeof(input_buffer)))
+        {
             return CMS_STATUS_ERROR;
         }
 
-        if (input_buffer[0] == '\0') {
+        if (input_buffer[0] == '\0')
+        {
             break;
         }
 
-        if (!cms_validate_programme(input_buffer)) {
+        if (!cms_validate_programme(input_buffer))
+        {
             printf("Invalid programme. Please try again.\n");
             continue;
         }
@@ -404,20 +442,24 @@ CMS_STATUS cmd_update(StudentDatabase *db, int student_id) {
 
     /* Update mark */
     char mark_buffer[32];
-    while (1) {
+    while (1)
+    {
         printf("Enter mark (or press Enter to keep current): ");
-        if (!cms_read_line(mark_buffer, sizeof(mark_buffer))) {
+        if (!cms_read_line(mark_buffer, sizeof(mark_buffer)))
+        {
             return CMS_STATUS_ERROR;
         }
 
-        if (mark_buffer[0] == '\0') {
+        if (mark_buffer[0] == '\0')
+        {
             break;
         }
 
         char *end_ptr = NULL;
         float new_mark = strtof(mark_buffer, &end_ptr);
 
-        if (end_ptr == mark_buffer || *end_ptr != '\0' || !cms_validate_mark(new_mark)) {
+        if (end_ptr == mark_buffer || *end_ptr != '\0' || !cms_validate_mark(new_mark))
+        {
             printf("Invalid mark. Please enter a value between %.2f and %.2f.\n",
                    CMS_MIN_MARK, CMS_MAX_MARK);
             continue;
@@ -429,28 +471,35 @@ CMS_STATUS cmd_update(StudentDatabase *db, int student_id) {
 
     status = cms_database_update(db, student_id, &updated_record);
 
-    if (status == CMS_STATUS_OK) {
+    if (status == CMS_STATUS_OK)
+    {
         printf("Record updated successfully.\n");
-    } else {
+    }
+    else
+    {
         cms_print_status(status);
     }
 
     return status;
 }
 
-CMS_STATUS cmd_delete(StudentDatabase *db, int student_id) {
-    if (db == NULL) {
+CMS_STATUS cmd_delete(StudentDatabase *db, int student_id)
+{
+    if (db == NULL)
+    {
         return CMS_STATUS_INVALID_ARGUMENT;
     }
 
     /* Ensure a database is loaded */
-    if (!db->is_loaded) {
+    if (!db->is_loaded)
+    {
         printf("CMS> No database is currently opened.\n");
         return CMS_STATUS_INVALID_ARGUMENT;
     }
 
     /* Validate student ID */
-    if (!cms_validate_student_id(student_id)) {
+    if (!cms_validate_student_id(student_id))
+    {
         printf("CMS: Invalid student ID.\n");
         return CMS_STATUS_INVALID_ARGUMENT;
     }
@@ -459,21 +508,26 @@ CMS_STATUS cmd_delete(StudentDatabase *db, int student_id) {
     StudentRecord tmp_record;
     CMS_STATUS status = cms_database_query(db, student_id, &tmp_record);
 
-    if (status == CMS_STATUS_NOT_FOUND) {
+    if (status == CMS_STATUS_NOT_FOUND)
+    {
         printf("CMS: The record with ID=%d does not exist.\n", student_id);
         return status;
-    } else if (status != CMS_STATUS_OK) {
+    }
+    else if (status != CMS_STATUS_OK)
+    {
         cms_print_status(status);
         return status;
     }
 
     /* Confirmation loop */
     char input_buffer[32];
-    while (1) {
+    while (1)
+    {
         printf("CMS: Are you sure you want to delete record with ID=%d? Type \"Y\" to confirm or type \"N\" to cancel.\n",
                student_id);
 
-        if (!cms_read_line(input_buffer, sizeof(input_buffer))) {
+        if (!cms_read_line(input_buffer, sizeof(input_buffer)))
+        {
             /* Treat read failure as cancellation */
             printf("CMS: The deletion is cancelled.\n");
             return CMS_STATUS_ERROR;
@@ -482,51 +536,66 @@ CMS_STATUS cmd_delete(StudentDatabase *db, int student_id) {
         cms_trim_string(input_buffer);
         cms_string_to_upper(input_buffer);
 
-        if (strcmp(input_buffer, "Y") == 0) {
+        if (strcmp(input_buffer, "Y") == 0)
+        {
             status = cms_database_delete(db, student_id);
-            if (status == CMS_STATUS_OK) {
+            if (status == CMS_STATUS_OK)
+            {
                 printf("CMS: The record with ID=%d is successfully deleted.\n", student_id);
-            } else {
+            }
+            else
+            {
                 cms_print_status(status);
             }
             return status;
-        } else if (strcmp(input_buffer, "N") == 0) {
+        }
+        else if (strcmp(input_buffer, "N") == 0)
+        {
             printf("CMS: The deletion is cancelled.\n");
             return CMS_STATUS_OK;
-        } else {
+        }
+        else
+        {
             printf("CMS: Invalid input. Please type \"Y\" to confirm or \"N\" to cancel.\n");
         }
     }
 }
 
-CMS_STATUS cmd_save(StudentDatabase *db, const char *filename) {
-    if (db == NULL) {
+CMS_STATUS cmd_save(StudentDatabase *db, const char *filename)
+{
+    if (db == NULL)
+    {
         return CMS_STATUS_INVALID_ARGUMENT;
     }
 
-    if (!db->is_loaded) {
+    if (!db->is_loaded)
+    {
         printf("CMS: No database is currently opened.\n");
         return CMS_STATUS_INVALID_ARGUMENT;
     }
 
     const char *save_path = (filename != NULL && filename[0] != '\0') ? filename : db->file_path;
     CMS_STATUS status = cms_database_save(db, save_path);
-    if (status == CMS_STATUS_OK) {
+    if (status == CMS_STATUS_OK)
+    {
         // Extract basename for cleaner display
         const char *display_name = save_path;
         char *slash = strrchr(save_path, '\\');
-        if (slash == NULL) {
+        if (slash == NULL)
+        {
             slash = strrchr(save_path, '/');
         }
-        if (slash != NULL) {
-            display_name = slash + 1;  // Use basename after last path separator
+        if (slash != NULL)
+        {
+            display_name = slash + 1; // Use basename after last path separator
         }
         printf("CMS: The database file \"%s\" is successfully saved.\n", display_name);
     }
     return status;
 }
 
-CMS_STATUS cmd_help(void) {
+CMS_STATUS cmd_help(void)
+{
     /* TODO: Implement HELP command */
     printf("\nAvailable Commands:\n");
     printf("  OPEN <filename>              - Load a database file\n");
@@ -542,31 +611,39 @@ CMS_STATUS cmd_help(void) {
     return CMS_STATUS_OK;
 }
 
-void cms_command_loop(StudentDatabase *db) {
+void cms_command_loop(StudentDatabase *db)
+{
     /* TODO: Implement main command loop */
     char input[CMS_MAX_COMMAND_LEN];
 
-    while (1) {
+    while (1)
+    {
         printf("CMS> ");
 
-        if (!cms_read_line(input, CMS_MAX_COMMAND_LEN)) {
+        if (!cms_read_line(input, CMS_MAX_COMMAND_LEN))
+        {
             break;
         }
 
         /* TODO: Parse and execute command */
         CMS_STATUS status = cms_parse_command(input, db);
 
-        if (status == CMS_STATUS_OK) {
+        if (status == CMS_STATUS_OK)
+        {
             /* Command executed successfully */
-        } else if (status == CMS_STATUS_NOT_IMPLEMENTED) {
+        }
+        else if (status == CMS_STATUS_NOT_IMPLEMENTED)
+        {
             printf("Command not yet implemented\n");
         }
     }
 }
 
-CMS_STATUS cms_parse_command(const char *input, StudentDatabase *db) {
+CMS_STATUS cms_parse_command(const char *input, StudentDatabase *db)
+{
     /* TODO: Implement command parsing */
-    if (input == NULL || db == NULL) {
+    if (input == NULL || db == NULL)
+    {
         return CMS_STATUS_INVALID_ARGUMENT;
     }
 
@@ -581,13 +658,14 @@ CMS_STATUS cms_parse_command(const char *input, StudentDatabase *db) {
     {
         char assumedFileLocation[255] = "./";
         strcat(assumedFileLocation, input + 5);
-        
+
         // If there's a space after "OPEN", trim it properly
         if (assumedFileLocation[2] == ' ')
             memmove(assumedFileLocation + 2, assumedFileLocation + 3, strlen(assumedFileLocation + 3) + 1);
 
         CMS_STATUS status = cms_database_load(db, assumedFileLocation);
-        if (status != CMS_STATUS_OK) {
+        if (status != CMS_STATUS_OK)
+        {
             cms_print_status(status);
         }
         return status;
@@ -625,7 +703,25 @@ CMS_STATUS cms_parse_command(const char *input, StudentDatabase *db) {
     }
     else if (strncmp(input, "SAVE", 4) == 0)
     {
-        return cmd_save(db, NULL);
+        const char *filename = input + 4;
+        if (*filename == ' ')
+            filename++; // Skip space after "SAVE"
+        char path_buffer[CMS_MAX_FILE_PATH_LEN];
+        if (*filename != '\0')
+        {
+            strncpy(path_buffer, filename, sizeof(path_buffer) - 1);
+            path_buffer[sizeof(path_buffer) - 1] = '\0';
+            cms_trim_string(path_buffer);
+            filename = path_buffer;
+            // If after trimming empty, set to NULL to save to default
+            if (*filename == '\0')
+                filename = NULL;
+        }
+        else
+        {
+            filename = NULL;
+        }
+        return cmd_save(db, filename);
     }
     else if (strncmp(input, "HELP", 4) == 0)
     {
