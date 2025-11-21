@@ -32,6 +32,28 @@ static int compare_by_mark_desc(const void *a, const void *b) {
     return compare_by_mark_asc(b, a);
 }
 
+static int compare_by_name_asc(const void *a, const void *b) {
+    const StudentRecord *rec_a = (const StudentRecord *)a;
+    const StudentRecord *rec_b = (const StudentRecord *)b;
+
+    return strcmp(rec_a->name, rec_b->name);
+}
+
+static int compare_by_name_desc(const void *a, const void *b) {
+    return compare_by_name_asc(b, a);
+}
+
+static int compare_by_programme_asc(const void *a, const void *b) {
+    const StudentRecord *rec_a = (const StudentRecord *)a;
+    const StudentRecord *rec_b = (const StudentRecord *)b;
+
+    return strcmp(rec_a->programme, rec_b->programme);
+}
+
+static int compare_by_programme_desc(const void *a, const void *b) {
+    return compare_by_programme_asc(b, a);
+}
+
 CMS_STATUS cms_sort_by_id(StudentDatabase *db, SortOrder order) {
     /* TODO: Implement sorting by ID */
     if (db == NULL || db->records == NULL) {
@@ -155,6 +177,10 @@ CMS_STATUS cms_show_all_sorted(const StudentDatabase *db, CmsSortKey sort_key, C
         cmp = (sort_order == CMS_SORT_DESC) ? compare_by_id_desc : compare_by_id_asc;
     } else if (sort_key == CMS_SORT_KEY_MARK) {
         cmp = (sort_order == CMS_SORT_DESC) ? compare_by_mark_desc : compare_by_mark_asc;
+    } else if (sort_key == CMS_SORT_KEY_NAME) {
+        cmp = (sort_order == CMS_SORT_DESC) ? compare_by_name_desc : compare_by_name_asc;
+    } else if (sort_key == CMS_SORT_KEY_PROGRAMME) {
+        cmp = (sort_order == CMS_SORT_DESC) ? compare_by_programme_desc : compare_by_programme_asc;
     } else {
         free(buffer);
         return CMS_STATUS_INVALID_ARGUMENT;

@@ -6,7 +6,9 @@
 typedef enum CmsSortKey {
     CMS_SORT_KEY_NONE = 0,
     CMS_SORT_KEY_ID,
-    CMS_SORT_KEY_MARK
+    CMS_SORT_KEY_MARK,
+    CMS_SORT_KEY_NAME,
+    CMS_SORT_KEY_PROGRAMME
 } CmsSortKey;
 
 typedef enum CmsSortOrder {

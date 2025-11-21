@@ -84,8 +84,9 @@ CMS_STATUS cmd_show(const StudentDatabase *db, const char *option, const char *o
     if (db == NULL) {
         return CMS_STATUS_INVALID_ARGUMENT;
     }
+    /* Default to sorting by ID ascending if no option is provided */
     if (option == NULL) {
-        return CMS_STATUS_INVALID_ARGUMENT;
+        option = "ID";
     }
 
     char opt_buf[32];
@@ -108,10 +109,18 @@ CMS_STATUS cmd_show(const StudentDatabase *db, const char *option, const char *o
     }
 
     if (cms_string_equals_ignore_case(opt_buf, "ALL")) {
+        CmsSortOrder sort_order = CMS_SORT_ASC;
         if (ord_buf[0] != '\0') {
-            return CMS_STATUS_INVALID_ARGUMENT;
+            if (cms_string_equals_ignore_case(ord_buf, "ASC")) {
+                sort_order = CMS_SORT_ASC;
+            } else if (cms_string_equals_ignore_case(ord_buf, "DESC")) {
+                sort_order = CMS_SORT_DESC;
+            } else {
+                return CMS_STATUS_INVALID_ARGUMENT;
+            }
         }
-        return cms_show_all(db);
+
+        return cms_show_all_sorted(db, CMS_SORT_KEY_ID, sort_order);
     }
 
     CmsSortKey sort_key;
@@ -119,6 +128,11 @@ CMS_STATUS cmd_show(const StudentDatabase *db, const char *option, const char *o
         sort_key = CMS_SORT_KEY_ID;
     } else if (cms_string_equals_ignore_case(opt_buf, "MARK")) {
         sort_key = CMS_SORT_KEY_MARK;
+    } else if (cms_string_equals_ignore_case(opt_buf, "NAME")) {
+        sort_key = CMS_SORT_KEY_NAME;
+    } else if (cms_string_equals_ignore_case(opt_buf, "PROGRAMME") ||
+               cms_string_equals_ignore_case(opt_buf, "PROGRAM")) {
+        sort_key = CMS_SORT_KEY_PROGRAMME;
     } else {
         return CMS_STATUS_INVALID_ARGUMENT;
     }
@@ -345,7 +359,7 @@ CMS_STATUS cmd_help(void) {
     /* TODO: Implement HELP command */
     printf("\nAvailable Commands:\n");
     printf("  OPEN <filename>              - Load a database file\n");
-    printf("  SHOW [ALL|SUMMARY|ID|MARK] [ASC|DESC] - Display records\n");
+    printf("  SHOW [ALL|SUMMARY|ID|MARK|NAME|PROGRAMME] [ASC|DESC] - Display records (defaults to ID ASC)\n");
     printf("  INSERT                       - Add a new student record\n");
     printf("  QUERY <student_id>          - Find a specific record\n");
     printf("  UPDATE <student_id>         - Modify an existing record\n");
@@ -433,8 +447,8 @@ CMS_STATUS cms_parse_command(const char *input, StudentDatabase *db) {
 
     if (strcmp(command, "SHOW") == 0) {
         if (args == NULL) {
-            printf("Usage: SHOW [ALL|SUMMARY|ID|MARK] [ASC|DESC]\n");
-            return CMS_STATUS_OK;
+            /* Default to showing ID ascending when no arguments are given */
+            return cmd_show(db, NULL, NULL);
         }
 
         char *option = args;
@@ -462,7 +476,7 @@ CMS_STATUS cms_parse_command(const char *input, StudentDatabase *db) {
                         order_end++;
                     }
                     if (*order_end != '\0') {
-                        printf("Usage: SHOW [ALL|SUMMARY|ID|MARK] [ASC|DESC]\n");
+                        printf("Usage: SHOW [ALL|SUMMARY|ID|MARK|NAME|PROGRAMME] [ASC|DESC]\n");
                         return CMS_STATUS_OK;
                     }
                 }
