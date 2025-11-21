@@ -1,248 +1,134 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <ctype.h>
-#include <limits.h>
-#include <errno.h>
-#include "commands.h"
-#include "database.h"
 #include "summary.h"
-#include "utils.h"
-#include "config.h"
+#include "database.h"
 
-static bool cms_parse_int_argument(const char *text, int *out_value) {
-    if (text == NULL || out_value == NULL) {
-        return false;
-    }
-
-    while (*text && isspace((unsigned char)*text)) {
-        text++;
-    }
-
-    if (*text == '\0') {
-        return false;
-    }
-
-    errno = 0;
-    char *end_ptr = NULL;
-    long value = strtol(text, &end_ptr, 10);
-    if (errno != 0) {
-        return false;
-    }
-
-    while (end_ptr && *end_ptr && isspace((unsigned char)*end_ptr)) {
-        end_ptr++;
-    }
-
-    if (end_ptr != NULL && *end_ptr != '\0') {
-        return false;
-    }
-
-    if (value < INT_MIN || value > INT_MAX) {
-        return false;
-    }
-
-    *out_value = (int)value;
-    return true;
+/* Comparison functions for qsort */
+static int compare_by_id_asc(const void *a, const void *b) {
+    /* TODO: Implement ID ascending comparison */
+    const StudentRecord *rec_a = (const StudentRecord *)a;
+    const StudentRecord *rec_b = (const StudentRecord *)b;
+    return rec_a->id - rec_b->id;
 }
 
-/**
- * Opens a student database file.
- * @param db Pointer to the StudentDatabase structure to load data into.
- * @param filename Path to the database file (uses CMS_DEFAULT_DATABASE_FILE if NULL or empty).
- * @return CMS_STATUS_OK on success, CMS_STATUS_INVALID_ARGUMENT or error code otherwise.
- */
-CMS_STATUS cmd_open(StudentDatabase *db, const char *filename) {
-    if (db == NULL) {
-        return CMS_STATUS_INVALID_ARGUMENT;
-    }
-
-    char path_buffer[CMS_MAX_FILE_PATH_LEN];
-    if (filename == NULL || filename[0] == '\0') {
-        filename = CMS_DEFAULT_DATABASE_FILE;
-    }
-
-    strncpy(path_buffer, filename, sizeof(path_buffer) - 1);
-    path_buffer[sizeof(path_buffer) - 1] = '\0';
-    cms_trim(path_buffer);
-
-    if (path_buffer[0] == '\0') {
-        return CMS_STATUS_INVALID_ARGUMENT;
-    }
-
-    return cms_database_load(db, path_buffer);
+static int compare_by_id_desc(const void *a, const void *b) {
+    /* TODO: Implement ID descending comparison */
+    return compare_by_id_asc(b, a);
 }
 
-/**
- * Displays student records or summary information.
- * @param db Pointer to the StudentDatabase structure to read from.
- * @param option Display mode: "ALL", "SUMMARY", "ID", or "MARK".
- * @param order Sort order for "ID" or "MARK": "ASC" or "DESC".
- * @return CMS_STATUS_OK on success, CMS_STATUS_INVALID_ARGUMENT or error code otherwise.
- */
-CMS_STATUS cmd_show(const StudentDatabase *db, const char *option, const char *order) {
-    if (db == NULL) {
-        return CMS_STATUS_INVALID_ARGUMENT;
-    }
-    /* Default to sorting by ID ascending if no option is provided */
-    if (option == NULL) {
-        option = "ID";
-    }
-
-    char opt_buf[32];
-    char ord_buf[16];
-
-    strncpy(opt_buf, option, sizeof(opt_buf) - 1);
-    opt_buf[sizeof(opt_buf) - 1] = '\0';
-    cms_trim(opt_buf);
-
-    if (order) {
-        strncpy(ord_buf, order, sizeof(ord_buf) - 1);
-        ord_buf[sizeof(ord_buf) - 1] = '\0';
-        cms_trim(ord_buf);
-    } else {
-        ord_buf[0] = '\0';
-    }
-
-    if (cms_string_equals_ignore_case(opt_buf, "SUMMARY")) {
-        return cms_show_summary(db);
-    }
-
-    if (cms_string_equals_ignore_case(opt_buf, "ALL")) {
-        CmsSortOrder sort_order = CMS_SORT_ASC;
-        if (ord_buf[0] != '\0') {
-            if (cms_string_equals_ignore_case(ord_buf, "ASC")) {
-                sort_order = CMS_SORT_ASC;
-            } else if (cms_string_equals_ignore_case(ord_buf, "DESC")) {
-                sort_order = CMS_SORT_DESC;
-            } else {
-                return CMS_STATUS_INVALID_ARGUMENT;
-            }
-        }
-
-        return cms_show_all_sorted(db, CMS_SORT_KEY_ID, sort_order);
-    }
-
-    CmsSortKey sort_key;
-    if (cms_string_equals_ignore_case(opt_buf, "ID")) {
-        sort_key = CMS_SORT_KEY_ID;
-    } else if (cms_string_equals_ignore_case(opt_buf, "MARK")) {
-        sort_key = CMS_SORT_KEY_MARK;
-    } else if (cms_string_equals_ignore_case(opt_buf, "NAME")) {
-        sort_key = CMS_SORT_KEY_NAME;
-    } else if (cms_string_equals_ignore_case(opt_buf, "PROGRAMME") ||
-               cms_string_equals_ignore_case(opt_buf, "PROGRAM")) {
-        sort_key = CMS_SORT_KEY_PROGRAMME;
-    } else {
-        return CMS_STATUS_INVALID_ARGUMENT;
-    }
-
-    CmsSortOrder sort_order = CMS_SORT_ASC;
-    if (ord_buf[0] != '\0') {
-        if (cms_string_equals_ignore_case(ord_buf, "ASC")) {
-            sort_order = CMS_SORT_ASC;
-        } else if (cms_string_equals_ignore_case(ord_buf, "DESC")) {
-            sort_order = CMS_SORT_DESC;
-        } else {
-            return CMS_STATUS_INVALID_ARGUMENT;
-        }
-    }
-
-    return cms_show_all_sorted(db, sort_key, sort_order);
-}
-
-CMS_STATUS cmd_insert(StudentDatabase *db) {
-    if (db == NULL) {
-        return CMS_STATUS_INVALID_ARGUMENT;
-    }
-
-    StudentRecord new_record;
-
-    /* Read student ID */
-    if (!cms_read_int("Enter student ID: ", &new_record.id)) {
-        printf("Failed to read student ID.\n");
-        return CMS_STATUS_ERROR;
-    }
-
-    if (!cms_validate_student_id(new_record.id)) {
-        printf("Invalid student ID.\n");
-        return CMS_STATUS_INVALID_ARGUMENT;
-    }
-
-    /* Read name */
-    if (!cms_read_string("Enter name: ", new_record.name, sizeof(new_record.name))) {
-        printf("Failed to read name.\n");
-        return CMS_STATUS_ERROR;
-    }
-
-    if (!cms_validate_name(new_record.name)) {
-        printf("Invalid name.\n");
-        return CMS_STATUS_INVALID_ARGUMENT;
-    }
-
-    /* Read programme */
-    if (!cms_read_string("Enter programme: ", new_record.programme, sizeof(new_record.programme))) {
-        printf("Failed to read programme.\n");
-        return CMS_STATUS_ERROR;
-    }
-
-    if (!cms_validate_programme(new_record.programme)) {
-        printf("Invalid programme.\n");
-        return CMS_STATUS_INVALID_ARGUMENT;
-    }
-
-    /* Read mark */
-    if (!cms_read_float("Enter mark (0-100): ", &new_record.mark)) {
-        printf("Failed to read mark.\n");
-        return CMS_STATUS_ERROR;
-    }
-
-    if (!cms_validate_mark(new_record.mark)) {
-        printf("Invalid mark.\n");
-        return CMS_STATUS_INVALID_ARGUMENT;
-    }
-
-    CMS_STATUS status = cms_database_insert(db, &new_record);
-    if (status == CMS_STATUS_DUPLICATE) {
-        printf("A record with ID %d already exists.\n", new_record.id);
-    } else if (status == CMS_STATUS_OK) {
-        printf("Record inserted successfully.\n");
-    } else {
-        cms_print_status(status);
-    }
-
-    return status;
-}
-
-CMS_STATUS cmd_query(const StudentDatabase *db, int student_id) {
-    /* TODO: Implement QUERY command */
-    if (db == NULL) {
-        return CMS_STATUS_INVALID_ARGUMENT;
-    }
-
-    StudentRecord record;
-    CMS_STATUS status = cms_database_query(db, student_id, &record);
+static int compare_by_mark_asc(const void *a, const void *b) {
+    /* TODO: Implement mark ascending comparison */
+    const StudentRecord *rec_a = (const StudentRecord *)a;
+    const StudentRecord *rec_b = (const StudentRecord *)b;
     
-    if (status == CMS_STATUS_OK) {
-        cms_database_show_record(&record);
-    }
-
-    return status;
+    if (rec_a->mark < rec_b->mark) return -1;
+    if (rec_a->mark > rec_b->mark) return 1;
+    return 0;
 }
 
-CMS_STATUS cmd_update(StudentDatabase *db, int student_id) {
+static int compare_by_mark_desc(const void *a, const void *b) {
+    /* TODO: Implement mark descending comparison */
+    return compare_by_mark_asc(b, a);
+}
+
+static int compare_by_name_asc(const void *a, const void *b) {
+    const StudentRecord *rec_a = (const StudentRecord *)a;
+    const StudentRecord *rec_b = (const StudentRecord *)b;
+
+    return strcmp(rec_a->name, rec_b->name);
+}
+
+static int compare_by_name_desc(const void *a, const void *b) {
+    return compare_by_name_asc(b, a);
+}
+
+static int compare_by_programme_asc(const void *a, const void *b) {
+    const StudentRecord *rec_a = (const StudentRecord *)a;
+    const StudentRecord *rec_b = (const StudentRecord *)b;
+
+    return strcmp(rec_a->programme, rec_b->programme);
+}
+
+static int compare_by_programme_desc(const void *a, const void *b) {
+    return compare_by_programme_asc(b, a);
+}
+
+CMS_STATUS cms_sort_by_id(StudentDatabase *db, SortOrder order) {
+    /* TODO: Implement sorting by ID */
+    if (db == NULL || db->records == NULL) {
+        return CMS_STATUS_INVALID_ARGUMENT;
+    }
+
+    if (order == SORT_ASCENDING) {
+        qsort(db->records, db->count, sizeof(StudentRecord), compare_by_id_asc);
+    } else {
+        qsort(db->records, db->count, sizeof(StudentRecord), compare_by_id_desc);
+    }
+
+    return CMS_STATUS_OK;
+}
+
+CMS_STATUS cms_sort_by_mark(StudentDatabase *db, SortOrder order) {
+    /* TODO: Implement sorting by mark */
+    if (db == NULL || db->records == NULL) {
+        return CMS_STATUS_INVALID_ARGUMENT;
+    }
+
+    if (order == SORT_ASCENDING) {
+        qsort(db->records, db->count, sizeof(StudentRecord), compare_by_mark_asc);
+    } else {
+        qsort(db->records, db->count, sizeof(StudentRecord), compare_by_mark_desc);
+    }
+
+    return CMS_STATUS_OK;
+}
+
+CMS_STATUS cms_calculate_summary(const StudentDatabase *db, SummaryStats *stats) {
+    if (db == NULL || stats == NULL) {
+        return CMS_STATUS_INVALID_ARGUMENT;
+    }
+
+    if (db->records == NULL || db->count == 0) {
+        return CMS_STATUS_NOT_FOUND;
+    }
+
+    stats->count = db->count;
+    float total = 0.0f;
+
+    stats->highest = db->records[0].mark;
+    stats->lowest = db->records[0].mark;
+    stats->highest_id = db->records[0].id;
+    stats->lowest_id = db->records[0].id;
+
+    for (size_t i = 0; i < db->count; ++i) {
+        const StudentRecord *record = &db->records[i];
+        total += record->mark;
+
+        if (record->mark > stats->highest) {
+            stats->highest = record->mark;
+            stats->highest_id = record->id;
+        }
+
+        if (record->mark < stats->lowest) {
+            stats->lowest = record->mark;
+            stats->lowest_id = record->id;
+        }
+    }
+
+    stats->average = total / (float)stats->count;
+
+    return CMS_STATUS_OK;
+}
+
+CMS_STATUS cms_display_summary(const StudentDatabase *db) {
     if (db == NULL) {
         return CMS_STATUS_INVALID_ARGUMENT;
     }
 
-    if (!cms_validate_student_id(student_id)) {
-        printf("Invalid student ID.\n");
-        return CMS_STATUS_INVALID_ARGUMENT;
-    }
-
-    StudentRecord current_record;
-    CMS_STATUS status = cms_database_query(db, student_id, &current_record);
-
+    SummaryStats stats;
+    CMS_STATUS status = cms_calculate_summary(db, &stats);
+    
     if (status == CMS_STATUS_NOT_FOUND) {
         printf("No record found for ID %d.\n", student_id);
         return status;

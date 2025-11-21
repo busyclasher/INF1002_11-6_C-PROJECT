@@ -11,13 +11,15 @@ typedef enum CmsSortKey {
     CMS_SORT_KEY_PROGRAMME
 } CmsSortKey;
 
-typedef enum CmsSortOrder {
+typedef enum CmsSortOrder 
+{
     CMS_SORT_ASC = 0,
     CMS_SORT_DESC
 } CmsSortOrder;
 
 /* Sort order enumeration */
-typedef enum {
+typedef enum 
+{
     SORT_ASCENDING,
     SORT_DESCENDING
 } SortOrder;
@@ -27,7 +29,8 @@ CMS_STATUS cms_sort_by_id(StudentDatabase *db, SortOrder order);
 CMS_STATUS cms_sort_by_mark(StudentDatabase *db, SortOrder order);
 
 /* Summary statistics */
-typedef struct {
+typedef struct 
+{
     size_t count;
     float average;
     float highest;
