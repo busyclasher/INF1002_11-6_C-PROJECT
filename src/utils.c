@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 #include <ctype.h>
 #include "../include/utils.h"
@@ -59,34 +60,54 @@ bool cms_validate_mark(float mark)
 
 void cms_trim_string(char *str)
 {
-    /* Remove leading and trailing whitespace */
     if (str == NULL)
     {
         return;
     }
 
-    int len = strlen(str);
-
-    /* Remove leading whitespace */
-    int start = 0;
-    while (start < len && isspace((unsigned char)str[start]))
+    char *start = str;
+    while (*start && isspace((unsigned char)*start))
     {
         start++;
     }
 
-    /* Remove trailing whitespace */
-    int end = len - 1;
-    while (end >= start && isspace((unsigned char)str[end]))
+    char *end = start + strlen(start);
+    while (end > start && isspace((unsigned char)*(end - 1)))
     {
         end--;
     }
 
-    /* Shift trimmed string and null-terminate */
-    if (start > 0)
+    *end = '\0';
+
+    if (start != str)
     {
-        memmove(str, str + start, end - start + 2);
+        memmove(str, start, (size_t)(end - start + 1));
     }
-    str[end - start + 1] = '\0';
+}
+
+void cms_trim(char *str)
+{
+    cms_trim_string(str);
+}
+
+bool cms_string_equals_ignore_case(const char *a, const char *b)
+{
+    if (a == NULL || b == NULL)
+    {
+        return false;
+    }
+
+    while (*a && *b)
+    {
+        if (tolower((unsigned char)*a) != tolower((unsigned char)*b))
+        {
+            return false;
+        }
+        a++;
+        b++;
+    }
+
+    return *a == *b;
 }
 
 void cms_string_to_upper(char *str)
@@ -244,4 +265,23 @@ void cms_display_table(const StudentDatabase *db)
            name_width, "--------------------",
            prog_width, "------------------------------",
            mark_width, "----------");
+}
+
+bool cms_parse_int_argument(const char *arg, int *out_value)
+{
+    if (arg == NULL || out_value == NULL)
+    {
+        return false;
+    }
+
+    char *endptr;
+    long val = strtol(arg, &endptr, 10);
+
+    if (endptr == arg || *endptr != '\0')
+    {
+        return false; /* Not a valid integer or trailing garbage */
+    }
+
+    *out_value = (int)val;
+    return true;
 }
