@@ -23,7 +23,7 @@ int main(void) {
     printf("=====================================\n");
     printf("We hereby pledge that this project is\n");
     printf("not plagiarized and was written from our\n");
-    printf("own research and compilation.\n");
+    printf("own development and compilation.\n");
     printf("-------------------------------------\n");
     printf("Key members:\n");
     printf("  Cody Tan De Xuan (2503322)\n");

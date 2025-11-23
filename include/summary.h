@@ -30,6 +30,19 @@ CMS_STATUS cms_sort_by_id(StudentDatabase *db, SortOrder order);
 CMS_STATUS cms_sort_by_mark(StudentDatabase *db, SortOrder order);
 
 /* Summary statistics */
+typedef enum
+{
+    CMS_GRADE_A_PLUS = 0,
+    CMS_GRADE_A,
+    CMS_GRADE_B_PLUS,
+    CMS_GRADE_B,
+    CMS_GRADE_C_PLUS,
+    CMS_GRADE_C,
+    CMS_GRADE_D,
+    CMS_GRADE_F,
+    CMS_GRADE_BUCKET_COUNT
+} CmsGradeBucket;
+
 typedef struct
 {
     size_t count;
@@ -38,6 +51,7 @@ typedef struct
     float lowest;
     int highest_id;
     int lowest_id;
+    size_t grade_counts[CMS_GRADE_BUCKET_COUNT];
 } SummaryStats;
 
 CMS_STATUS cms_calculate_summary(const StudentDatabase *db, SummaryStats *stats);

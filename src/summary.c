@@ -4,6 +4,42 @@
 #include <string.h>
 #include "../include/database.h"
 
+static CmsGradeBucket cms_grade_bucket_from_mark(float mark)
+{
+    if (mark >= 85.0f)
+    {
+        return CMS_GRADE_A_PLUS;
+    }
+    if (mark >= 75.0f)
+    {
+        return CMS_GRADE_A;
+    }
+    if (mark >= 70.0f)
+    {
+        return CMS_GRADE_B_PLUS;
+    }
+    if (mark >= 65.0f)
+    {
+        return CMS_GRADE_B;
+    }
+    if (mark >= 60.0f)
+    {
+        return CMS_GRADE_C_PLUS;
+    }
+    if (mark >= 55.0f)
+    {
+        return CMS_GRADE_C;
+    }
+    if (mark >= 50.0f)
+    {
+        return CMS_GRADE_D;
+    }
+    return CMS_GRADE_F;
+}
+
+static const char *cms_grade_labels[CMS_GRADE_BUCKET_COUNT] = {
+    "A+", "A", "B+", "B", "C+", "C", "D", "F"};
+
 /* Comparison functions for qsort */
 static int compare_by_id_asc(const void *a, const void *b)
 {
@@ -110,6 +146,7 @@ CMS_STATUS cms_calculate_summary(const StudentDatabase *db, SummaryStats *stats)
         return CMS_STATUS_NOT_FOUND;
     }
 
+    memset(stats, 0, sizeof(SummaryStats));
     stats->count = db->count;
     float total = 0.0f;
 
@@ -133,6 +170,12 @@ CMS_STATUS cms_calculate_summary(const StudentDatabase *db, SummaryStats *stats)
         {
             stats->lowest = record->mark;
             stats->lowest_id = record->id;
+        }
+
+        CmsGradeBucket bucket = cms_grade_bucket_from_mark(record->mark);
+        if (bucket >= 0 && bucket < CMS_GRADE_BUCKET_COUNT)
+        {
+            stats->grade_counts[bucket]++;
         }
     }
 
@@ -167,6 +210,12 @@ CMS_STATUS cms_display_summary(const StudentDatabase *db)
     printf("  Average Mark: %.2f\n", stats.average);
     printf("  Highest Mark: %.2f (ID: %d)\n", stats.highest, stats.highest_id);
     printf("  Lowest Mark: %.2f (ID: %d)\n\n", stats.lowest, stats.lowest_id);
+    printf("  Grade Counts:\n");
+    for (int i = 0; i < CMS_GRADE_BUCKET_COUNT; ++i)
+    {
+        printf("    %-3s: %zu\n", cms_grade_labels[i], stats.grade_counts[i]);
+    }
+    printf("\n");
 
     return CMS_STATUS_OK;
 }
