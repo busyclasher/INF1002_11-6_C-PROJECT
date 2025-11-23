@@ -21,6 +21,17 @@ int main(void) {
     printf("=====================================\n");
     printf("       Student Records CMS\n");
     printf("=====================================\n");
+    printf("We hereby pledge that this project is\n");
+    printf("not plagiarized and was written from our\n");
+    printf("own research and compilation.\n");
+    printf("-------------------------------------\n");
+    printf("Key members:\n");
+    printf("  Cody Tan De Xuan (2503322)\n");
+    printf("  Gerome Wong (2503678)\n");
+    printf("  Gabriel Lee Hon Fei (2501901)\n");
+    printf("  Natalie Peh (2501526)\n");
+    printf("  Randy See Meng Teck (2500605)\n");
+    printf("-------------------------------------\n");
     printf("Type 'HELP' for the list of commands.\n");
     printf("Default database: %s\n\n", CMS_DEFAULT_DATABASE_FILE);
 
