@@ -11,6 +11,7 @@ CMS_STATUS cmd_query(const StudentDatabase *db, int student_id);
 CMS_STATUS cmd_update(StudentDatabase *db, int student_id);
 CMS_STATUS cmd_delete(StudentDatabase *db, int student_id);
 CMS_STATUS cmd_save(StudentDatabase *db, const char *filename);
+CMS_STATUS cmd_undo(StudentDatabase *db);
 CMS_STATUS cmd_help(void);
 
 /* Main command loop */

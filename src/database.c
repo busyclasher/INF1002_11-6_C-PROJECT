@@ -5,6 +5,56 @@
 #include "../include/config.h"
 #include "../include/utils.h"
 
+static void cms_clear_undo_state(StudentDatabase *db)
+{
+    if (db == NULL)
+    {
+        return;
+    }
+    db->undo_state.action = CMS_UNDO_NONE;
+    db->undo_state.valid = false;
+    db->undo_state.index = 0;
+    db->undo_state.prev_dirty = db->is_dirty;
+    memset(&db->undo_state.before, 0, sizeof(StudentRecord));
+    memset(&db->undo_state.after, 0, sizeof(StudentRecord));
+}
+
+static void cms_set_undo_state(StudentDatabase *db,
+                               CmsUndoAction action,
+                               const StudentRecord *before,
+                               const StudentRecord *after,
+                               size_t index,
+                               bool prev_dirty)
+{
+    if (db == NULL)
+    {
+        return;
+    }
+
+    db->undo_state.action = action;
+    db->undo_state.valid = true;
+    db->undo_state.index = index;
+    db->undo_state.prev_dirty = prev_dirty;
+
+    if (before != NULL)
+    {
+        db->undo_state.before = *before;
+    }
+    else
+    {
+        memset(&db->undo_state.before, 0, sizeof(StudentRecord));
+    }
+
+    if (after != NULL)
+    {
+        db->undo_state.after = *after;
+    }
+    else
+    {
+        memset(&db->undo_state.after, 0, sizeof(StudentRecord));
+    }
+}
+
 static CMS_STATUS cms_ensure_capacity(StudentDatabase *db)
 {
     if (db == NULL)
@@ -75,6 +125,7 @@ CMS_STATUS cms_database_init(StudentDatabase *db)
     db->file_path[0] = '\0';
     db->is_loaded = false;
     db->is_dirty = false;
+    cms_clear_undo_state(db);
 
     return CMS_STATUS_OK;
 }
@@ -97,6 +148,7 @@ void cms_database_cleanup(StudentDatabase *db)
     db->file_path[0] = '\0';
     db->is_loaded = false;
     db->is_dirty = false;
+    cms_clear_undo_state(db);
 }
 
 static void cms_database_reset_runtime_state(StudentDatabase *db)
@@ -108,6 +160,7 @@ static void cms_database_reset_runtime_state(StudentDatabase *db)
     db->count = 0;
     db->is_loaded = false;
     db->is_dirty = false;
+    cms_clear_undo_state(db);
 }
 
 CMS_STATUS cms_database_load(StudentDatabase *db, const char *file_path)
@@ -242,6 +295,7 @@ CMS_STATUS cms_database_load(StudentDatabase *db, const char *file_path)
     db->is_dirty = false;
     strncpy(db->file_path, file_path, CMS_MAX_FILE_PATH_LEN - 1);
     db->file_path[CMS_MAX_FILE_PATH_LEN - 1] = '\0';
+    cms_clear_undo_state(db);
 
     return CMS_STATUS_OK;
 }
@@ -339,8 +393,10 @@ CMS_STATUS cms_database_insert(StudentDatabase *db, const StudentRecord *record)
     dest->mark = record->mark;
     db->count++;
 
+    bool prev_dirty = db->is_dirty;
     db->is_dirty = true;
     db->is_loaded = true;
+    cms_set_undo_state(db, CMS_UNDO_INSERT, NULL, dest, db->count - 1, prev_dirty);
 
     return CMS_STATUS_OK;
 }
@@ -402,6 +458,9 @@ CMS_STATUS cms_database_update(StudentDatabase *db, int student_id, const Studen
         return CMS_STATUS_NOT_FOUND;
     }
 
+    StudentRecord previous = db->records[index];
+    bool prev_dirty = db->is_dirty;
+
     StudentRecord *target = &db->records[index];
     target->id = student_id;
     strncpy(target->name, new_record->name, CMS_MAX_NAME_LEN);
@@ -411,6 +470,7 @@ CMS_STATUS cms_database_update(StudentDatabase *db, int student_id, const Studen
     target->mark = new_record->mark;
 
     db->is_dirty = true;
+    cms_set_undo_state(db, CMS_UNDO_UPDATE, &previous, target, index, prev_dirty);
 
     return CMS_STATUS_OK;
 }
@@ -438,6 +498,9 @@ CMS_STATUS cms_database_delete(StudentDatabase *db, int student_id)
         return CMS_STATUS_NOT_FOUND;
     }
 
+    StudentRecord removed = db->records[index];
+    bool prev_dirty = db->is_dirty;
+
     if (index < db->count - 1)
     {
         memmove(&db->records[index],
@@ -447,8 +510,98 @@ CMS_STATUS cms_database_delete(StudentDatabase *db, int student_id)
 
     db->count--;
     db->is_dirty = true;
+    cms_set_undo_state(db, CMS_UNDO_DELETE, &removed, NULL, index, prev_dirty);
 
     return CMS_STATUS_OK;
+}
+
+CMS_STATUS cms_database_undo(StudentDatabase *db)
+{
+    if (db == NULL)
+    {
+        return CMS_STATUS_INVALID_ARGUMENT;
+    }
+
+    if (!db->undo_state.valid || db->undo_state.action == CMS_UNDO_NONE)
+    {
+        printf("CMS: Nothing to undo.\n");
+        return CMS_STATUS_INVALID_ARGUMENT;
+    }
+
+    CMS_STATUS status = CMS_STATUS_OK;
+
+    switch (db->undo_state.action)
+    {
+    case CMS_UNDO_INSERT:
+    {
+        size_t index = 0;
+        if (!cms_database_find_index(db, db->undo_state.after.id, &index))
+        {
+            printf("CMS: Unable to undo insert; record not found.\n");
+            cms_clear_undo_state(db);
+            return CMS_STATUS_NOT_FOUND;
+        }
+
+        if (index < db->count - 1)
+        {
+            memmove(&db->records[index],
+                    &db->records[index + 1],
+                    (db->count - index - 1) * sizeof(StudentRecord));
+        }
+        db->count--;
+        db->is_dirty = db->undo_state.prev_dirty;
+        break;
+    }
+    case CMS_UNDO_DELETE:
+    {
+        status = cms_ensure_capacity(db);
+        if (status != CMS_STATUS_OK)
+        {
+            return status;
+        }
+
+        size_t insert_index = db->undo_state.index;
+        if (insert_index > db->count)
+        {
+            insert_index = db->count;
+        }
+
+        if (insert_index < db->count)
+        {
+            memmove(&db->records[insert_index + 1],
+                    &db->records[insert_index],
+                    (db->count - insert_index) * sizeof(StudentRecord));
+        }
+
+        db->records[insert_index] = db->undo_state.before;
+        db->count++;
+        db->is_dirty = db->undo_state.prev_dirty;
+        break;
+    }
+    case CMS_UNDO_UPDATE:
+    {
+        size_t index = db->undo_state.index;
+        if (index >= db->count || db->records[index].id != db->undo_state.before.id)
+        {
+            if (!cms_database_find_index(db, db->undo_state.before.id, &index))
+            {
+                printf("CMS: Unable to undo update; record not found.\n");
+                cms_clear_undo_state(db);
+                return CMS_STATUS_NOT_FOUND;
+            }
+        }
+
+        db->records[index] = db->undo_state.before;
+        db->is_dirty = db->undo_state.prev_dirty;
+        break;
+    }
+    default:
+        return CMS_STATUS_INVALID_ARGUMENT;
+    }
+
+    cms_clear_undo_state(db);
+    printf("CMS: Last change has been undone.\n");
+    return status;
 }
 
 CMS_STATUS cms_database_show_all(const StudentDatabase *db)

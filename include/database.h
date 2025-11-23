@@ -17,6 +17,7 @@ CMS_STATUS cms_database_insert(StudentDatabase *db, const StudentRecord *record)
 CMS_STATUS cms_database_query(const StudentDatabase *db, int student_id, StudentRecord *out_record);
 CMS_STATUS cms_database_update(StudentDatabase *db, int student_id, const StudentRecord *new_record);
 CMS_STATUS cms_database_delete(StudentDatabase *db, int student_id);
+CMS_STATUS cms_database_undo(StudentDatabase *db);
 
 /* Display operations */
 CMS_STATUS cms_database_show_all(const StudentDatabase *db);

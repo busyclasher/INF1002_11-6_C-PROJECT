@@ -595,6 +595,22 @@ CMS_STATUS cmd_save(StudentDatabase *db, const char *filename)
     return status;
 }
 
+CMS_STATUS cmd_undo(StudentDatabase *db)
+{
+    if (db == NULL)
+    {
+        return CMS_STATUS_INVALID_ARGUMENT;
+    }
+
+    if (!db->is_loaded && db->count == 0)
+    {
+        printf("CMS: No database is currently opened.\n");
+        return CMS_STATUS_INVALID_ARGUMENT;
+    }
+
+    return cms_database_undo(db);
+}
+
 CMS_STATUS cmd_help(void)
 {
     /* TODO: Implement HELP command */
@@ -605,6 +621,7 @@ CMS_STATUS cmd_help(void)
     printf("  QUERY <student_id>          - Find a specific record\n");
     printf("  UPDATE <student_id>         - Modify an existing record\n");
     printf("  DELETE <student_id>         - Remove a student record\n");
+    printf("  UNDO                        - Revert the most recent change\n");
     printf("  SAVE [filename]             - Save changes to file\n");
     printf("  HELP                        - Display this help\n");
     printf("  EXIT or QUIT                - Exit the application\n\n");
@@ -800,6 +817,16 @@ CMS_STATUS cms_parse_command(const char *input, StudentDatabase *db)
     {
         const char *save_path = args;
         return cmd_save(db, save_path);
+    }
+
+    if (strcmp(command, "UNDO") == 0)
+    {
+        if (args != NULL)
+        {
+            printf("Usage: UNDO\n");
+            return CMS_STATUS_OK;
+        }
+        return cmd_undo(db);
     }
 
     if (strcmp(command, "EXIT") == 0 || strcmp(command, "QUIT") == 0)

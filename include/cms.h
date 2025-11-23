@@ -27,6 +27,25 @@ typedef struct StudentRecord
     float mark;
 } StudentRecord;
 
+/* Undo tracking */
+typedef enum
+{
+    CMS_UNDO_NONE = 0,
+    CMS_UNDO_INSERT,
+    CMS_UNDO_UPDATE,
+    CMS_UNDO_DELETE
+} CmsUndoAction;
+
+typedef struct
+{
+    CmsUndoAction action;
+    StudentRecord before;
+    StudentRecord after;
+    size_t index;
+    bool prev_dirty;
+    bool valid;
+} CmsUndoState;
+
 /* Database structure */
 typedef struct StudentDatabase
 {
@@ -36,6 +55,7 @@ typedef struct StudentDatabase
     char file_path[CMS_MAX_FILE_PATH_LEN];
     bool is_loaded;
     bool is_dirty;
+    CmsUndoState undo_state;
 } StudentDatabase;
 
 /* Status message handling */
