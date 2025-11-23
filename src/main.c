@@ -20,10 +20,8 @@ int main(void)
 
     printf("Declaration\n");
     printf("SIT's policy on copying does not allow the students to copy source code as well as assessment solutions\n");
-    printf("from another person AI or other places. It is the students' responsibility to guarantee that their\n");
-    printf("assessment solutions are their own work. Meanwhile, the students must also ensure that their work is\n");
-    printf("not accessible by others. Where such plagiarism is detected, both of the assessments involved will\n");
-    printf("receive ZERO mark.\n\n");
+    printf("from another person AI or other places. Meanwhile, the students must also ensure that their work is\n");
+    printf("not accessible by others.\n\n");
     printf("We hereby declare that:\n");
     printf("- We fully understand and agree to the abovementioned plagiarism policy.\n");
     printf("- We did not copy any code from others or from other places.\n");
@@ -33,7 +31,7 @@ int main(void)
     printf("- We agree that we will not disclose any information or material of the group project to others or\n");
     printf("upload to any other places for public access.\n");
     printf("- We agree that we did not copy any code directly from AI generated sources\n\n");
-    printf("Declared by: Phisherman\n");
+    printf("Declared by: Team P11-6\n");
     printf("Team members:\n");
     printf("1. Cody Tan De Xuan (2503322)\n");
     printf("2. Gerome Wong (2503678)\n");
@@ -55,7 +53,7 @@ int main(void)
     {
         printf("Warning: Failed to load '%s'.\n", CMS_DEFAULT_DATABASE_FILE);
         cms_print_status(status);
-        printf("You may use the OPEN command to load another file.\n\n");
+        printf("You may use the OPEgcc src/*.c -Iinclude -o cms.exeN command to load another file.\n\n");
     }
 
     cms_command_loop(&db);
