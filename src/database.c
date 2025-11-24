@@ -617,18 +617,7 @@ CMS_STATUS cms_database_show_all(const StudentDatabase *db)
         return CMS_STATUS_OK;
     }
 
-    printf("\n%-8s  %-32s  %-20s  %-6s\n", "ID", "Name", "Programme", "Mark");
-    printf("-------------------------------------------------------------------------------\n");
-    for (size_t i = 0; i < db->count; ++i)
-    {
-        const StudentRecord *record = &db->records[i];
-        printf("%-8d  %-32s  %-20s  %6.2f\n",
-               record->id,
-               record->name,
-               record->programme,
-               record->mark);
-    }
-    printf("-------------------------------------------------------------------------------\n\n");
+    cms_display_table(db);
 
     return CMS_STATUS_OK;
 }
