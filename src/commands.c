@@ -552,7 +552,7 @@ CMS_STATUS cmd_delete(StudentDatabase *db, int student_id)
     }
 }
 
-CMS_STATUS cmd_filter(const StudentDatabase *db, const char *programme)
+CMS_STATUS cms_filter(const StudentDatabase *db, const char *programme)
 {
     if (db == NULL)
     {
@@ -633,8 +633,11 @@ CMS_STATUS cmd_filter(const StudentDatabase *db, const char *programme)
         return CMS_STATUS_OK;
     }
 
-    printf("\n%-8s  %-32s  %-20s  %-6s\n", "ID", "Name", "Programme", "Mark");
-    printf("-------------------------------------------------------------------------------\n");
+    StudentRecord *filtered_records = (StudentRecord *)malloc(db->count * sizeof(StudentRecord));
+    if (filtered_records == NULL)
+    {
+        return CMS_STATUS_ERROR;
+    }
 
     size_t matches = 0;
     for (size_t i = 0; i < db->count; ++i)
@@ -642,22 +645,35 @@ CMS_STATUS cmd_filter(const StudentDatabase *db, const char *programme)
         const StudentRecord *record = &db->records[i];
         if (cms_string_equals_ignore_case(record->programme, prog_buf))
         {
-            printf("%-8d  %-32s  %-20s  %6.2f\n",
-                   record->id,
-                   record->name,
-                   record->programme,
-                   record->mark);
-            matches++;
+            filtered_records[matches++] = *record;
+
         }
     }
 
-    if (matches == 0)
+    /* If none matched, report and free */
+    if (matches == 0) {
+        printf("\nNo records matched programme \"%s\".\n\n", prog_buf);
+        free(filtered_records);
+        return CMS_STATUS_OK;
+    } 
+    else 
     {
-        printf("No records found for programme \"%s\".\n", prog_buf);
-    }
-    printf("-------------------------------------------------------------------------------\n\n");
+        StudentDatabase *filtered_db = malloc(sizeof(StudentDatabase));
+        if (filtered_db == NULL)
+        {
+            free(filtered_records);
+            return CMS_STATUS_ERROR;
+        }
+        filtered_db->records = filtered_records;
+        filtered_db->count = matches;
 
-    return CMS_STATUS_OK;
+        cms_display_table(filtered_db);
+
+        free(filtered_records);
+        free(filtered_db);
+
+        return CMS_STATUS_OK;
+    }
 }
 
 CMS_STATUS cmd_save(StudentDatabase *db, const char *filename)
@@ -914,7 +930,7 @@ CMS_STATUS cms_parse_command(const char *input, StudentDatabase *db)
 
     if (strcmp(command, "FILTER") == 0)
     {
-        return cmd_filter(db, args);
+        return cms_filter(db, args);
     }
 
     if (strcmp(command, "SAVE") == 0)

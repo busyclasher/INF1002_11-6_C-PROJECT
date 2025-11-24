@@ -10,7 +10,7 @@ CMS_STATUS cmd_insert(StudentDatabase *db, const char *params);
 CMS_STATUS cmd_query(const StudentDatabase *db, int student_id);
 CMS_STATUS cmd_update(StudentDatabase *db, int student_id);
 CMS_STATUS cmd_delete(StudentDatabase *db, int student_id);
-CMS_STATUS cmd_filter(const StudentDatabase *db, const char *programme);
+CMS_STATUS cms_filter(const StudentDatabase *db, const char *programme);
 CMS_STATUS cmd_save(StudentDatabase *db, const char *filename);
 CMS_STATUS cmd_undo(StudentDatabase *db);
 CMS_STATUS cmd_help(void);

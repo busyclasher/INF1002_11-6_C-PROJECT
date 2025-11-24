@@ -667,7 +667,7 @@ CMS_STATUS cms_database_show_sorted(const StudentDatabase *db, CmsSortKey sort_k
     StudentDatabase *sortable_db = malloc(sizeof(StudentDatabase));
     if (sortable_db == NULL)
     {
-        free(sorted_records);
+        free(sortable_db);
         return CMS_STATUS_ERROR;
     }
     sortable_db->records = sorted_records;
