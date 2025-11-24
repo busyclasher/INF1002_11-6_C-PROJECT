@@ -691,21 +691,6 @@ CMS_STATUS cms_database_show_sorted(const StudentDatabase *db, CmsSortKey sort_k
         break;
     }
 
-    /* Legacy Display header, replaced with cms_display_table for standardisation */
-    // printf("\nTable Name: StudentRecords\n");
-    // printf("%-12s %-20s %-30s %-10s\n", "ID", "Name", "Programme", "Mark");
-    // printf("%-12s %-20s %-30s %-10s\n", "----", "----", "---------", "----");
-
-    // /* Display sorted records */
-    // for (size_t i = 0; i < db->count; i++)
-    // {
-    //     printf("%-12d %-20s %-30s %-10.1f\n",
-    //            sorted_records[i].id,
-    //            sorted_records[i].name,
-    //            sorted_records[i].programme,
-    //            sorted_records[i].mark);
-    // }
-    // printf("\n");
     cms_display_table(sortable_db);
 
     /* Free the copied records */
