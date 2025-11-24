@@ -40,6 +40,51 @@ static CmsGradeBucket cms_grade_bucket_from_mark(float mark)
 static const char *cms_grade_labels[CMS_GRADE_BUCKET_COUNT] = {
     "A+", "A", "B+", "B", "C+", "C", "D", "F"};
 
+/* Render a simple ASCII bar chart for grade counts */
+static void cms_print_grade_bar_chart(const SummaryStats *stats)
+{
+    /* Use ASCII for compatibility across terminals (UTF-8 block chars can garble in some shells) */
+    const char bar_char = '#';
+    if (stats == NULL)
+    {
+        return;
+    }
+
+    size_t max_count = 0;
+    for (int i = 0; i < CMS_GRADE_BUCKET_COUNT; ++i)
+    {
+        if (stats->grade_counts[i] > max_count)
+        {
+            max_count = stats->grade_counts[i];
+        }
+    }
+
+    if (max_count == 0)
+    {
+        printf("  Grade Distribution (bar chart): no data available.\n\n");
+        return;
+    }
+
+    const int max_bar_width = 40; /* terminal-friendly width */
+    printf("  Grade Distribution (bar chart):\n");
+    printf("    %-3s | %-*s Count\n", "Grade", max_bar_width, "");
+    printf("    ----   %.*s ------\n", max_bar_width, "----------------------------------------");
+
+    for (int i = 0; i < CMS_GRADE_BUCKET_COUNT; ++i)
+    {
+        size_t count = stats->grade_counts[i];
+        int bar_length = (int)((double)count / (double)max_count * max_bar_width + 0.5);
+
+        printf("    %-3s | ", cms_grade_labels[i]);
+        for (int j = 0; j < bar_length; ++j)
+        {
+            putchar(bar_char);
+        }
+        printf(" (%zu)\n", count);
+    }
+    printf("\n");
+}
+
 /* Comparison functions for qsort */
 static int compare_by_id_asc(const void *a, const void *b)
 {
@@ -216,6 +261,8 @@ CMS_STATUS cms_display_summary(const StudentDatabase *db)
         printf("    %-3s: %zu\n", cms_grade_labels[i], stats.grade_counts[i]);
     }
     printf("\n");
+
+    cms_print_grade_bar_chart(&stats);
 
     return CMS_STATUS_OK;
 }

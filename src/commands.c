@@ -562,6 +562,114 @@ CMS_STATUS cmd_delete(StudentDatabase *db, int student_id)
     }
 }
 
+CMS_STATUS cmd_filter(const StudentDatabase *db, const char *programme)
+{
+    if (db == NULL)
+    {
+        return CMS_STATUS_INVALID_ARGUMENT;
+    }
+
+    if (!db->is_loaded)
+    {
+        printf("CMS: No database is currently opened.\n");
+        return CMS_STATUS_INVALID_ARGUMENT;
+    }
+
+    if (programme == NULL || programme[0] == '\0')
+    {
+        printf("Usage: FILTER <programme>\n");
+        return CMS_STATUS_OK;
+    }
+
+    /* Accept either:
+       - FILTER <programme>
+       - FILTER PROGRAMME <programme> (ignore the PROGRAMME keyword if present) */
+    char prog_buf[CMS_MAX_COMMAND_LEN];
+    strncpy(prog_buf, programme, sizeof(prog_buf) - 1);
+    prog_buf[sizeof(prog_buf) - 1] = '\0';
+    cms_trim_string(prog_buf);
+
+    if (prog_buf[0] == '\0')
+    {
+        printf("Usage: FILTER <programme>\n");
+        return CMS_STATUS_OK;
+    }
+
+    /* If the args start with the keyword PROGRAMME, skip it */
+    const char *keyword = "PROGRAMME";
+    size_t keyword_len = strlen(keyword);
+    if (cms_string_equals_ignore_case(prog_buf, keyword))
+    {
+        printf("Usage: FILTER <programme>\n");
+        return CMS_STATUS_OK;
+    }
+    else
+    {
+        /* Case-insensitive prefix check for "PROGRAMME " */
+        size_t buf_len = strlen(prog_buf);
+        if (buf_len > keyword_len)
+        {
+            bool prefix_match = true;
+            for (size_t i = 0; i < keyword_len; ++i)
+            {
+                if (tolower((unsigned char)prog_buf[i]) != tolower((unsigned char)keyword[i]))
+                {
+                    prefix_match = false;
+                    break;
+                }
+            }
+
+            if (prefix_match && isspace((unsigned char)prog_buf[keyword_len]))
+            {
+                char *after_kw = prog_buf + keyword_len;
+                while (*after_kw && isspace((unsigned char)*after_kw))
+                {
+                    after_kw++;
+                }
+                memmove(prog_buf, after_kw, strlen(after_kw) + 1);
+            }
+        }
+    }
+
+    if (prog_buf[0] == '\0')
+    {
+        printf("Usage: FILTER <programme>\n");
+        return CMS_STATUS_OK;
+    }
+
+    if (db->records == NULL || db->count == 0)
+    {
+        printf("\nNo records available.\n\n");
+        return CMS_STATUS_OK;
+    }
+
+    printf("\n%-8s  %-32s  %-20s  %-6s\n", "ID", "Name", "Programme", "Mark");
+    printf("-------------------------------------------------------------------------------\n");
+
+    size_t matches = 0;
+    for (size_t i = 0; i < db->count; ++i)
+    {
+        const StudentRecord *record = &db->records[i];
+        if (cms_string_equals_ignore_case(record->programme, prog_buf))
+        {
+            printf("%-8d  %-32s  %-20s  %6.2f\n",
+                   record->id,
+                   record->name,
+                   record->programme,
+                   record->mark);
+            matches++;
+        }
+    }
+
+    if (matches == 0)
+    {
+        printf("No records found for programme \"%s\".\n", prog_buf);
+    }
+    printf("-------------------------------------------------------------------------------\n\n");
+
+    return CMS_STATUS_OK;
+}
+
 CMS_STATUS cmd_save(StudentDatabase *db, const char *filename)
 {
     if (db == NULL)
@@ -812,6 +920,11 @@ CMS_STATUS cms_parse_command(const char *input, StudentDatabase *db)
             return CMS_STATUS_OK;
         }
         return cmd_delete(db, student_id);
+    }
+
+    if (strcmp(command, "FILTER") == 0)
+    {
+        return cmd_filter(db, args);
     }
 
     if (strcmp(command, "SAVE") == 0)

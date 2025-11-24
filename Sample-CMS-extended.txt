@@ -1,0 +1,14 @@
+Table Name: StudentRecords
+ID	Name	Programme	Mark
+2301001	Aiden Tan	Computer Science	91.5
+2301002	Mei Lin	Software Engineering	78.0
+2301003	Ravi Kumar	Data Science	84.3
+2301004	Sophia Ng	Information Systems	67.5
+2301005	Liam Wong	Cybersecurity	72.0
+2301006	Emily Goh	Digital Supply Chain	88.4
+2301007	Noah Lee	Computer Science	59.2
+2301008	Ava Chia	Software Engineering	95.0
+2301009	Ethan Quek	Data Science	63.7
+2301010	Grace Tan	Information Systems	74.8
+2301011	Matthew Koh	Cybersecurity	81.6
+2301012	Olivia Seah	Digital Supply Chain	55.5
