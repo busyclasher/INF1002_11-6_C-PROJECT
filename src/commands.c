@@ -330,7 +330,6 @@ CMS_STATUS cmd_insert(StudentDatabase *db, const char *params)
 
 CMS_STATUS cmd_query(const StudentDatabase *db, int student_id)
 {
-    /* TODO: Implement QUERY command */
     if (db == NULL)
     {
         return CMS_STATUS_INVALID_ARGUMENT;
@@ -646,17 +645,17 @@ CMS_STATUS cms_filter(const StudentDatabase *db, const char *programme)
         if (cms_string_equals_ignore_case(record->programme, prog_buf))
         {
             filtered_records[matches++] = *record;
-
         }
     }
 
     /* If none matched, report and free */
-    if (matches == 0) {
+    if (matches == 0)
+    {
         printf("\nNo records matched programme \"%s\".\n\n", prog_buf);
         free(filtered_records);
         return CMS_STATUS_OK;
-    } 
-    else 
+    }
+    else
     {
         StudentDatabase *filtered_db = malloc(sizeof(StudentDatabase));
         if (filtered_db == NULL)
@@ -727,7 +726,6 @@ CMS_STATUS cmd_undo(StudentDatabase *db)
 
 CMS_STATUS cmd_help(void)
 {
-    /* TODO: Implement HELP command */
     printf("\nAvailable Commands:\n");
     printf("  OPEN <filename>              - Load a database file\n");
     printf("  SHOW [ALL|SUMMARY|ID|MARK|NAME|PROGRAMME] [ASC|DESC] - Display records (defaults to ID ASC)\n");
@@ -836,11 +834,11 @@ CMS_STATUS cms_parse_command(const char *input, StudentDatabase *db)
 
     if (strcmp(command, "SHOW") == 0)
     {
-        // if (args == NULL)
-        // {
-        //     /* Default to showing ID ascending when no arguments are given */
-        //     return cmd_show(db, NULL, NULL);
-        // }
+        if (args == NULL)
+        {
+            /* Default to showing ID ascending when no arguments are given */
+            return cmd_show(db, NULL, NULL);
+        }
 
         char *option = args;
         char *order = NULL;
