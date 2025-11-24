@@ -119,24 +119,6 @@ CMS_STATUS cmd_show(const StudentDatabase *db, const char *option, const char *o
     }
 
     return cms_database_show_sorted(db, sort_key, sort_order);
-
-    // CmsSortKey key_str;
-    // CmsSortOrder order_str;
-
-    // if (sort_key == CMS_SORT_KEY_ID) {
-    //     key_str = "ID";
-    // }
-    // else if (sort_key == CMS_SORT_KEY_MARK) {
-    //     strcpy(key_str, "MARK");
-    // }
-
-    // if (sort_order == CMS_SORT_ASC) {
-    //     strcpy(order_str, "ASC");
-    // }
-    // else if (sort_order == CMS_SORT_DESC) {
-    //     strcpy(order_str, "DESC");
-    // }
-    // return cms_database_show_sorted(db, key_str, order_str);
 }
 
 CMS_STATUS cmd_insert(StudentDatabase *db, const char *params)
