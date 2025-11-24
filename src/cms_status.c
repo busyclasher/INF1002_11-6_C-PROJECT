@@ -49,7 +49,7 @@ CMS_STATUS cms_print_declaration(void)
     printf("- We agree that we will not disclose any information or material of the group project to others or\n");
     printf("upload to any other places for public access.\n");
     printf("- We agree that we did not copy any code directly from AI generated sources\n\n");
-    printf("Declared by: Team P11-6\n");
+    printf("Declared by: Team P2-6\n");
     printf("Team members:\n");
     printf("1. Cody Tan De Xuan (2503322)\n");
     printf("2. Gerome Wong (2503678)\n");
