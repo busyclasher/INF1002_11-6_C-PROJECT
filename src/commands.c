@@ -330,7 +330,6 @@ CMS_STATUS cmd_insert(StudentDatabase *db, const char *params)
 
 CMS_STATUS cmd_query(const StudentDatabase *db, int student_id)
 {
-    /* TODO: Implement QUERY command */
     if (db == NULL)
     {
         return CMS_STATUS_INVALID_ARGUMENT;
@@ -727,7 +726,6 @@ CMS_STATUS cmd_undo(StudentDatabase *db)
 
 CMS_STATUS cmd_help(void)
 {
-    /* TODO: Implement HELP command */
     printf("\nAvailable Commands:\n");
     printf("  OPEN <filename>              - Load a database file\n");
     printf("  SHOW [ALL|SUMMARY|ID|MARK|NAME|PROGRAMME] [ASC|DESC] - Display records (defaults to ID ASC)\n");

@@ -22,7 +22,6 @@ bool cms_validate_student_id(int id)
 
 bool cms_validate_name(const char *name)
 {
-    /* TODO: Implement name validation */
     if (name == NULL || strlen(name) == 0)
     {
         return false;
@@ -38,7 +37,6 @@ bool cms_validate_name(const char *name)
 
 bool cms_validate_programme(const char *programme)
 {
-    /* TODO: Implement programme validation */
     if (programme == NULL || strlen(programme) == 0)
     {
         return false;
@@ -54,7 +52,6 @@ bool cms_validate_programme(const char *programme)
 
 bool cms_validate_mark(float mark)
 {
-    /* TODO: Implement mark validation */
     return mark >= CMS_MIN_MARK && mark <= CMS_MAX_MARK;
 }
 
@@ -112,7 +109,6 @@ bool cms_string_equals_ignore_case(const char *a, const char *b)
 
 void cms_string_to_upper(char *str)
 {
-    /* TODO: Implement string to uppercase conversion */
     if (str == NULL)
     {
         return;
@@ -126,7 +122,6 @@ void cms_string_to_upper(char *str)
 
 bool cms_read_line(char *buffer, size_t size)
 {
-    /* TODO: Implement line reading with proper handling */
     if (buffer == NULL || size == 0)
     {
         return false;
@@ -149,7 +144,6 @@ bool cms_read_line(char *buffer, size_t size)
 
 bool cms_read_int(const char *prompt, int *value)
 {
-    /* TODO: Implement integer reading with validation */
     if (prompt == NULL || value == NULL)
     {
         return false;
@@ -176,7 +170,6 @@ bool cms_read_int(const char *prompt, int *value)
 
 bool cms_read_float(const char *prompt, float *value)
 {
-    /* TODO: Implement float reading with validation */
     if (prompt == NULL || value == NULL)
     {
         return false;
@@ -203,7 +196,6 @@ bool cms_read_float(const char *prompt, float *value)
 
 bool cms_read_string(const char *prompt, char *buffer, size_t size)
 {
-    /* TODO: Implement string reading with validation */
     if (prompt == NULL || buffer == NULL || size == 0)
     {
         return false;

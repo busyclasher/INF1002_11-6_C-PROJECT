@@ -3,7 +3,6 @@
 
 const char *cms_status_message(CMS_STATUS status)
 {
-    /* TODO: Implement status message mapping */
     switch (status)
     {
     case CMS_STATUS_OK:
@@ -29,7 +28,6 @@ const char *cms_status_message(CMS_STATUS status)
 
 void cms_print_status(CMS_STATUS status)
 {
-    /* TODO: Implement status printing */
     if (status != CMS_STATUS_OK)
     {
         fprintf(stderr, "Error: %s\n", cms_status_message(status));
