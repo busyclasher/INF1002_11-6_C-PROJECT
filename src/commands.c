@@ -727,17 +727,19 @@ CMS_STATUS cmd_undo(StudentDatabase *db)
 CMS_STATUS cmd_help(void)
 {
     printf("\nAvailable Commands:\n");
-    printf("  OPEN <filename>              - Load a database file\n");
-    printf("  SHOW [ALL|SUMMARY|ID|MARK|NAME|PROGRAMME] [ASC|DESC] - Display records (defaults to ID ASC)\n");
-    printf("  INSERT                       - Add a new student record\n");
-    printf("  QUERY <student_id>          - Find a specific record\n");
-    printf("  UPDATE <student_id>         - Modify an existing record\n");
-    printf("  DELETE <student_id>         - Remove a student record\n");
-    printf("  FILTER <programme>          - List students by programme (e.g FILTER Computer Science) \n");
-    printf("  UNDO                        - Revert the most recent change\n");
-    printf("  SAVE [filename]             - Save changes to file\n");
-    printf("  HELP                        - Display this help\n");
-    printf("  EXIT or QUIT                - Exit the application\n\n");
+    printf("  OPEN <filename>               - Load a database file\n");
+    printf("  SHOW [ID|MARK|NAME|PROGRAMME] [ASC|DESC] - Display records (defaults to ID ASC)\n");
+    printf("  SHOW ALL                      - Display all student records\n");
+    printf("  SHOW SUMMARY                  - Display summary statistics\n");
+    printf("  INSERT                        - Add a new student record\n");
+    printf("  QUERY <student_id>            - Find a specific record\n");
+    printf("  UPDATE <student_id>           - Modify an existing record\n");
+    printf("  DELETE <student_id>           - Remove a student record\n");
+    printf("  FILTER <programme>            - List students by programme (e.g FILTER Computer Science) \n");
+    printf("  UNDO                          - Revert the most recent change\n");
+    printf("  SAVE [filename]               - Save changes to file\n");
+    printf("  HELP                          - Display this help\n");
+    printf("  EXIT or QUIT                  - Exit the application\n\n");
 
     return CMS_STATUS_OK;
 }
