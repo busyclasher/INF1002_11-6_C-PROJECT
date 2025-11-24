@@ -141,6 +141,54 @@ static int compare_by_programme_desc(const void *a, const void *b)
     return compare_by_programme_asc(b, a);
 }
 
+CMS_STATUS cms_sort_by_name(StudentDatabase *db, SortOrder order)
+{
+    if (db == NULL || db->records == NULL)
+    {
+        return CMS_STATUS_INVALID_ARGUMENT;
+    }
+
+    if (order == CMS_SORT_ASC)
+    {
+        qsort(db->records, db->count, sizeof(StudentRecord), compare_by_name_asc);
+    }
+    else if (order == CMS_SORT_DESC)
+    {
+        qsort(db->records, db->count, sizeof(StudentRecord), compare_by_name_desc);
+    }
+    else 
+    {
+        return CMS_STATUS_INVALID_ARGUMENT;
+    }
+
+    return CMS_STATUS_OK;
+}
+
+
+CMS_STATUS cms_sort_by_prog(StudentDatabase *db, SortOrder order)
+{
+    if (db == NULL || db->records == NULL)
+    {
+        return CMS_STATUS_INVALID_ARGUMENT;
+    }
+
+    if (order == CMS_SORT_ASC)
+    {
+        qsort(db->records, db->count, sizeof(StudentRecord), compare_by_programme_asc);
+    }
+    else if (order == CMS_SORT_DESC)
+    {
+        qsort(db->records, db->count, sizeof(StudentRecord), compare_by_programme_desc);
+    } 
+    else 
+    {
+        return CMS_STATUS_INVALID_ARGUMENT;
+    }
+
+    return CMS_STATUS_OK;
+}
+
+
 CMS_STATUS cms_sort_by_id(StudentDatabase *db, SortOrder order)
 {
     if (db == NULL || db->records == NULL)
@@ -148,13 +196,17 @@ CMS_STATUS cms_sort_by_id(StudentDatabase *db, SortOrder order)
         return CMS_STATUS_INVALID_ARGUMENT;
     }
 
-    if (order == SORT_ASCENDING)
+    if (order == CMS_SORT_ASC)
     {
         qsort(db->records, db->count, sizeof(StudentRecord), compare_by_id_asc);
     }
-    else
+    else if (order == CMS_SORT_DESC)
     {
         qsort(db->records, db->count, sizeof(StudentRecord), compare_by_id_desc);
+    }
+    else 
+    {
+        return CMS_STATUS_INVALID_ARGUMENT;
     }
 
     return CMS_STATUS_OK;
@@ -167,13 +219,17 @@ CMS_STATUS cms_sort_by_mark(StudentDatabase *db, SortOrder order)
         return CMS_STATUS_INVALID_ARGUMENT;
     }
 
-    if (order == SORT_ASCENDING)
+    if (order == CMS_SORT_ASC)
     {
         qsort(db->records, db->count, sizeof(StudentRecord), compare_by_mark_asc);
     }
-    else
+    else if (order == CMS_SORT_DESC)
     {
         qsort(db->records, db->count, sizeof(StudentRecord), compare_by_mark_desc);
+    } 
+    else 
+    {
+        return CMS_STATUS_INVALID_ARGUMENT;
     }
 
     return CMS_STATUS_OK;

@@ -92,9 +92,17 @@ CMS_STATUS cmd_show(const StudentDatabase *db, const char *option, const char *o
     {
         sort_key = CMS_SORT_KEY_ID;
     }
-    else if (strcmp(opt_buf, "Mark") == 0)
+    else if (strcmp(opt_buf, "MARK") == 0)
     {
         sort_key = CMS_SORT_KEY_MARK;
+    }
+    else if (strcmp(opt_buf, "NAME") == 0)
+    {
+        sort_key = CMS_SORT_KEY_NAME;
+    }
+    else if (strcmp(opt_buf, "PROGRAMME") == 0)
+    {
+        sort_key = CMS_SORT_KEY_PROGRAMME;
     }
     else
     {
@@ -812,11 +820,11 @@ CMS_STATUS cms_parse_command(const char *input, StudentDatabase *db)
 
     if (strcmp(command, "SHOW") == 0)
     {
-        if (args == NULL)
-        {
-            /* Default to showing ID ascending when no arguments are given */
-            return cmd_show(db, NULL, NULL);
-        }
+        // if (args == NULL)
+        // {
+        //     /* Default to showing ID ascending when no arguments are given */
+        //     return cmd_show(db, NULL, NULL);
+        // }
 
         char *option = args;
         char *order = NULL;

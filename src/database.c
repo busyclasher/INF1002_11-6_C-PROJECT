@@ -617,18 +617,7 @@ CMS_STATUS cms_database_show_all(const StudentDatabase *db)
         return CMS_STATUS_OK;
     }
 
-    printf("\n%-8s  %-32s  %-20s  %-6s\n", "ID", "Name", "Programme", "Mark");
-    printf("-------------------------------------------------------------------------------\n");
-    for (size_t i = 0; i < db->count; ++i)
-    {
-        const StudentRecord *record = &db->records[i];
-        printf("%-8d  %-32s  %-20s  %6.2f\n",
-               record->id,
-               record->name,
-               record->programme,
-               record->mark);
-    }
-    printf("-------------------------------------------------------------------------------\n\n");
+    cms_display_table(db);
 
     return CMS_STATUS_OK;
 }
@@ -675,27 +664,54 @@ CMS_STATUS cms_database_show_sorted(const StudentDatabase *db, CmsSortKey sort_k
     /* Copy records */
     memcpy(sorted_records, db->records, db->count * sizeof(StudentRecord));
 
-    /* Note: Sorting logic would use cms_sort_by_id() or cms_sort_by_mark() from summary.h
-       For now, we'll just display records in current order */
-
-    /* Display header */
-    printf("\nTable Name: StudentRecords\n");
-    printf("%-12s %-20s %-30s %-10s\n", "ID", "Name", "Programme", "Mark");
-    printf("%-12s %-20s %-30s %-10s\n", "----", "----", "---------", "----");
-
-    /* Display sorted records */
-    for (size_t i = 0; i < db->count; i++)
+    StudentDatabase *sortable_db = malloc(sizeof(StudentDatabase));
+    if (sortable_db == NULL)
     {
-        printf("%-12d %-20s %-30s %-10.1f\n",
-               sorted_records[i].id,
-               sorted_records[i].name,
-               sorted_records[i].programme,
-               sorted_records[i].mark);
+        free(sorted_records);
+        return CMS_STATUS_ERROR;
     }
-    printf("\n");
+    sortable_db->records = sorted_records;
+    sortable_db->count = db->count;
+
+    // Updated sorting logic to use the cms_sort functions and sortable_db
+    switch(sort_key){
+        case CMS_SORT_KEY_ID:
+            cms_sort_by_id(sortable_db, sort_order);
+            break;
+        case CMS_SORT_KEY_MARK:
+            cms_sort_by_mark(sortable_db, sort_order);
+            break;
+        case CMS_SORT_KEY_NAME:
+            cms_sort_by_name(sortable_db, sort_order);
+            break;
+        case CMS_SORT_KEY_PROGRAMME:
+            cms_sort_by_prog(sortable_db, sort_order);
+            break;
+        default:
+            cms_sort_by_id(sortable_db, sort_order);
+            break;
+    }
+
+    /* Legacy Display header, replaced with cms_display_table for standardisation */
+    // printf("\nTable Name: StudentRecords\n");
+    // printf("%-12s %-20s %-30s %-10s\n", "ID", "Name", "Programme", "Mark");
+    // printf("%-12s %-20s %-30s %-10s\n", "----", "----", "---------", "----");
+
+    // /* Display sorted records */
+    // for (size_t i = 0; i < db->count; i++)
+    // {
+    //     printf("%-12d %-20s %-30s %-10.1f\n",
+    //            sorted_records[i].id,
+    //            sorted_records[i].name,
+    //            sorted_records[i].programme,
+    //            sorted_records[i].mark);
+    // }
+    // printf("\n");
+    cms_display_table(sortable_db);
 
     /* Free the copied records */
     free(sorted_records);
+    free(sortable_db);
 
     return CMS_STATUS_OK;
 }

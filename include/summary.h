@@ -27,6 +27,8 @@ typedef enum
 
 /* Sorting functions */
 CMS_STATUS cms_sort_by_id(StudentDatabase *db, SortOrder order);
+CMS_STATUS cms_sort_by_name(StudentDatabase *db, SortOrder order);
+CMS_STATUS cms_sort_by_prog(StudentDatabase *db, SortOrder order);
 CMS_STATUS cms_sort_by_mark(StudentDatabase *db, SortOrder order);
 
 /* Summary statistics */
