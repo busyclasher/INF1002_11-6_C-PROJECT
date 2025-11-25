@@ -51,6 +51,8 @@ typedef struct
     float average;
     float highest;
     float lowest;
+    char highest_name[CMS_MAX_NAME_LEN + 1];
+    char lowest_name[CMS_MAX_NAME_LEN + 1];
     int highest_id;
     int lowest_id;
     size_t grade_counts[CMS_GRADE_BUCKET_COUNT];

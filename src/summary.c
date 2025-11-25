@@ -255,6 +255,10 @@ CMS_STATUS cms_calculate_summary(const StudentDatabase *db, SummaryStats *stats)
     stats->lowest = db->records[0].mark;
     stats->highest_id = db->records[0].id;
     stats->lowest_id = db->records[0].id;
+    strncpy(stats->highest_name, db->records[0].name, CMS_MAX_NAME_LEN);
+    stats->highest_name[CMS_MAX_NAME_LEN] = '\0';
+    strncpy(stats->lowest_name, db->records[0].name, CMS_MAX_NAME_LEN);
+    stats->lowest_name[CMS_MAX_NAME_LEN] = '\0';
 
     for (size_t i = 0; i < db->count; ++i)
     {
@@ -265,12 +269,16 @@ CMS_STATUS cms_calculate_summary(const StudentDatabase *db, SummaryStats *stats)
         {
             stats->highest = record->mark;
             stats->highest_id = record->id;
+            strncpy(stats->highest_name, record->name, CMS_MAX_NAME_LEN);
+            stats->highest_name[CMS_MAX_NAME_LEN] = '\0';
         }
 
         if (record->mark < stats->lowest)
         {
             stats->lowest = record->mark;
             stats->lowest_id = record->id;
+            strncpy(stats->lowest_name, record->name, CMS_MAX_NAME_LEN);
+            stats->lowest_name[CMS_MAX_NAME_LEN] = '\0';
         }
 
         CmsGradeBucket bucket = cms_grade_bucket_from_mark(record->mark);
@@ -309,8 +317,8 @@ CMS_STATUS cms_display_summary(const StudentDatabase *db)
     printf("\nSummary Statistics:\n");
     printf("  Total Students: %zu\n", stats.count);
     printf("  Average Mark: %.2f\n", stats.average);
-    printf("  Highest Mark: %.2f (ID: %d)\n", stats.highest, stats.highest_id);
-    printf("  Lowest Mark: %.2f (ID: %d)\n\n", stats.lowest, stats.lowest_id);
+    printf("  Highest Mark: %.2f (ID: %d | Student: %s)\n", stats.highest, stats.highest_id, stats.highest_name);
+    printf("  Lowest Mark: %.2f (ID: %d | Student: %s)\n\n", stats.lowest, stats.lowest_id, stats.lowest_name);
     printf("  Grade Counts:\n");
     for (int i = 0; i < CMS_GRADE_BUCKET_COUNT; ++i)
     {
