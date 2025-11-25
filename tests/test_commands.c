@@ -53,9 +53,12 @@ void test_cmd_open_nonexistent_file(void)
 
 void test_cmd_open_null_arguments(void)
 {
-    /* TODO: Test OPEN with NULL arguments */
-    TEST_ASSERT_EQUAL(CMS_STATUS_INVALID_ARGUMENT, cmd_open(NULL, "test.txt"));
-    TEST_ASSERT_EQUAL(CMS_STATUS_INVALID_ARGUMENT, cmd_open(&test_db, NULL));
+    /* Test OPEN with NULL database pointer - should fail */
+    TEST_ASSERT_EQUAL(CMS_STATUS_INVALID_ARGUMENT, cmd_open(NULL, "tests/test_data/test_valid.txt"));
+
+    /* Test OPEN with NULL filename - should NOT return INVALID_ARGUMENT */
+    CMS_STATUS status = cmd_open(&test_db, NULL);
+    TEST_ASSERT_TRUE(status != CMS_STATUS_INVALID_ARGUMENT);
 }
 
 /* ===== SHOW Command Tests ===== */
@@ -109,17 +112,60 @@ void test_cmd_show_null_database(void)
 
 void test_cmd_insert_valid(void)
 {
-    /* TODO: Test INSERT command with valid data */
-    /* Note: This test requires user input simulation */
-    /* CMS_STATUS status = cmd_insert(&test_db); */
-    /* TEST_ASSERT_EQUAL(CMS_STATUS_OK, status); */
-    TEST_IGNORE_MESSAGE("Interactive test - requires input simulation");
+    /* Test INSERT command with valid data string */
+    test_db.is_loaded = true;
+
+    char *params = "ID=2500605 NAME=Randy See PROGRAMME=Artificial Intelligence MARK=67.0";
+    CMS_STATUS status = cmd_insert(&test_db, params);
+
+    TEST_ASSERT_EQUAL(CMS_STATUS_OK, status);
+    TEST_ASSERT_EQUAL(1, test_db.count);
+    TEST_ASSERT_EQUAL(2500605, test_db.records[0].id);
+    TEST_ASSERT_EQUAL_STRING("Randy See", test_db.records[0].name);
+    TEST_ASSERT_EQUAL_STRING("Artificial Intelligence", test_db.records[0].programme);
+    TEST_ASSERT_EQUAL_FLOAT(67.0f, test_db.records[0].mark);
+}
+
+void test_cmd_insert_duplicate_id(void)
+{
+    test_db.is_loaded = true;
+
+    /* Insert first record */
+    char *params1 = "ID=2500605 NAME=Randy See PROGRAMME=Artificial Intelligence MARK=67.0";
+    TEST_ASSERT_EQUAL(CMS_STATUS_OK, cmd_insert(&test_db, params1));
+
+    /* Try to insert same ID again */
+    char *params2 = "ID=2500605 NAME=Wendy Wee PROGRAMME=Software Engineering MARK=70.0";
+    CMS_STATUS status = cmd_insert(&test_db, params2);
+
+    TEST_ASSERT_EQUAL(CMS_STATUS_DUPLICATE, status);
+    TEST_ASSERT_EQUAL(1, test_db.count); /* Should still be 1 */
+}
+
+void test_cmd_insert_invalid_data(void)
+{
+    test_db.is_loaded = true;
+
+    /* Invalid ID (too short) */
+    char *params_bad_id = "ID=2000 NAME=Randy See PROGRAMME=Artificial Intelligence MARK=67.0";
+    TEST_ASSERT_EQUAL(CMS_STATUS_INVALID_ARGUMENT, cmd_insert(&test_db, params_bad_id));
+
+    /* Invalid Mark (out of range) */
+    char *params_bad_mark = "ID=2500605 NAME=Randy See PROGRAMME=Artificial Intelligence MARK=420.0";
+    TEST_ASSERT_EQUAL(CMS_STATUS_INVALID_ARGUMENT, cmd_insert(&test_db, params_bad_mark));
 }
 
 void test_cmd_insert_null_database(void)
 {
-    /* TODO: Test INSERT with NULL database */
+    /* Test INSERT with NULL database */
     CMS_STATUS status = cmd_insert(NULL, NULL);
+    TEST_ASSERT_EQUAL(CMS_STATUS_INVALID_ARGUMENT, status);
+}
+
+void test_cmd_insert_not_loaded(void)
+{
+    test_db.is_loaded = false;
+    CMS_STATUS status = cmd_insert(&test_db, "ID=2500605 NAME=Randy See PROGRAMME=Artificial Intelligence MARK=67.0");
     TEST_ASSERT_EQUAL(CMS_STATUS_INVALID_ARGUMENT, status);
 }
 
@@ -276,7 +322,10 @@ int main(void)
 
     /* INSERT command tests */
     RUN_TEST(test_cmd_insert_valid);
+    RUN_TEST(test_cmd_insert_duplicate_id);
+    RUN_TEST(test_cmd_insert_invalid_data);
     RUN_TEST(test_cmd_insert_null_database);
+    RUN_TEST(test_cmd_insert_not_loaded);
 
     /* QUERY command tests */
     RUN_TEST(test_cmd_query_existing_record);

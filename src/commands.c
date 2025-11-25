@@ -887,12 +887,7 @@ CMS_STATUS cms_parse_command(const char *input, StudentDatabase *db)
 
     if (strcmp(command, "INSERT") == 0)
     {
-        if (args != NULL)
-        {
-            printf("Usage: INSERT\n");
-            return CMS_STATUS_OK;
-        }
-        return cmd_insert(db, NULL);
+        return cmd_insert(db, args);
     }
 
     if (strcmp(command, "QUERY") == 0)
